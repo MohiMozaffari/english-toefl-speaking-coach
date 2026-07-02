@@ -1,0 +1,21 @@
+# Backend
+backend/.venv/
+backend/venv/
+backend/__pycache__/
+backend/**/__pycache__/
+backend/*.pyc
+backend/data/config.json
+backend/data/app.db
+backend/data/*.wav
+backend/data/*.webm
+
+# Frontend
+frontend/node_modules/
+frontend/dist/
+
+# Claude Code local settings (machine-specific, not shared project config)
+.claude/settings.local.json
+
+# OS / editor
+.DS_Store
+Thumbs.db
