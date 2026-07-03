@@ -6,9 +6,17 @@ from fastapi import FastAPI, File, Form, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
+import alignment
+import coach
 import content
 import db
+import gamification
+import listening_content
 import llm_service
+import metrics as metrics_mod
+import pronunciation_content
+import shadowing_content
+import stats
 import whisper_service
 from config import load_config, save_config
 from errors import AppError
@@ -33,7 +41,13 @@ def handle_app_error(_request, exc: AppError):
     return JSONResponse(status_code=exc.status_code, content={"error": {"code": exc.code, "message": exc.message}})
 
 
-# --- Settings ----------------------------------------------------------------
+def _resolve_profile(profile_id: int | None) -> int:
+    if profile_id is not None and db.get_profile(profile_id):
+        return profile_id
+    return db.first_profile_id()
+
+
+# --- Settings & health -------------------------------------------------------
 
 
 @app.get("/api/settings")
@@ -64,6 +78,32 @@ def health():
     }
 
 
+# --- Profiles -----------------------------------------------------------------
+
+
+@app.get("/api/profiles")
+def profiles():
+    return db.list_profiles()
+
+
+@app.post("/api/profiles")
+def create_profile(payload: dict):
+    name = (payload.get("name") or "").strip()
+    if not name:
+        raise AppError("Profile name is required.", code="bad_profile_name")
+    profile_id = db.create_profile(name, int(payload.get("daily_goal_xp") or 50))
+    return db.get_profile(profile_id)
+
+
+@app.post("/api/profiles/{profile_id}")
+def update_profile(profile_id: int, payload: dict):
+    if not db.get_profile(profile_id):
+        raise AppError("Profile not found.", code="not_found", status_code=404)
+    goal = payload.get("daily_goal_xp")
+    db.update_profile(profile_id, name=payload.get("name"), daily_goal_xp=int(goal) if goal else None)
+    return db.get_profile(profile_id)
+
+
 # --- Content -------------------------------------------------------------
 
 
@@ -77,7 +117,38 @@ def toefl_topics():
     return {"tasks": content.get_toefl_tasks(), "timing": content.get_toefl_timing()}
 
 
-# --- Helpers ---------------------------------------------------------------
+@app.get("/api/shadowing/passages")
+def shadowing_passages():
+    return shadowing_content.get_passages()
+
+
+@app.get("/api/shadowing/passages/{passage_id}")
+def shadowing_passage(passage_id: str):
+    passage = shadowing_content.get_passage(passage_id)
+    if not passage:
+        raise AppError("Passage not found.", code="not_found", status_code=404)
+    return passage
+
+
+@app.get("/api/pronunciation/content")
+def pronunciation_lab():
+    return pronunciation_content.get_lab_content()
+
+
+@app.get("/api/listening/items")
+def listening_items():
+    return listening_content.get_items()
+
+
+@app.get("/api/listening/items/{item_id}")
+def listening_item(item_id: str):
+    item = listening_content.get_item(item_id)
+    if not item:
+        raise AppError("Listening item not found.", code="not_found", status_code=404)
+    return item
+
+
+# --- Transcription helpers -------------------------------------------------------
 
 
 async def _save_upload(audio: UploadFile) -> str:
@@ -93,6 +164,14 @@ async def _save_upload(audio: UploadFile) -> str:
     return tmp.name
 
 
+async def _transcribe_upload(audio: UploadFile, whisper_model: str) -> dict:
+    tmp_path = await _save_upload(audio)
+    try:
+        return whisper_service.transcribe_rich(tmp_path, whisper_model)
+    finally:
+        Path(tmp_path).unlink(missing_ok=True)
+
+
 # --- General practice --------------------------------------------------------
 
 
@@ -101,33 +180,37 @@ async def general_attempt(
     audio: UploadFile = File(...),
     topic_id: str = Form(...),
     topic_prompt: str = Form(...),
+    profile_id: int | None = Form(None),
 ):
     config = load_config()
-    tmp_path = await _save_upload(audio)
-    try:
-        transcript = whisper_service.transcribe(tmp_path, config["whisper_model"])
-    finally:
-        Path(tmp_path).unlink(missing_ok=True)
+    pid = _resolve_profile(profile_id)
+    rich = await _transcribe_upload(audio, config["whisper_model"])
 
-    if not transcript.strip():
+    if not rich["text"].strip():
         raise AppError(
             "No speech was detected in the recording. Please try again and speak clearly into the microphone.",
             code="empty_transcript",
         )
 
-    feedback = llm_service.get_general_feedback(config, topic_prompt, transcript)
+    attempt_metrics = metrics_mod.compute_metrics(rich["words"], rich["duration"])
+    learner_context = coach.learner_context_for_llm(pid)
+    feedback = llm_service.get_general_feedback(config, topic_prompt, rich["text"], learner_context)
 
     session_id = db.insert_session(
         mode="general",
         task_type=topic_id,
         task_title=topic_prompt,
         task_prompt=topic_prompt,
-        transcript=transcript,
+        transcript=rich["text"],
         feedback=feedback,
         score_band=None,
+        metrics=attempt_metrics,
+        profile_id=pid,
+        prompt_ref=f"general:{topic_id}",
     )
+    db.insert_activity(pid, "general", gamification.xp_for("general"), ref=f"session:{session_id}")
 
-    return {"session_id": session_id, "transcript": transcript, "feedback": feedback}
+    return {"session_id": session_id, "transcript": rich["text"], "feedback": feedback, "metrics": attempt_metrics}
 
 
 # --- TOEFL practice (2026 format: Listen and Repeat + Take an Interview) ----------
@@ -138,8 +221,10 @@ async def toefl_attempt(
     audio: List[UploadFile] = File(...),
     task_type: str = Form(...),
     prompt_id: str = Form(...),
+    profile_id: int | None = Form(None),
 ):
     config = load_config()
+    pid = _resolve_profile(profile_id)
     if task_type not in ("listen_repeat", "interview"):
         raise AppError(f"Unknown TOEFL task type: {task_type}", code="bad_task_type")
 
@@ -155,12 +240,11 @@ async def toefl_attempt(
         )
 
     transcripts = []
+    item_metrics = []
     for file in audio:
-        tmp_path = await _save_upload(file)
-        try:
-            transcripts.append(whisper_service.transcribe(tmp_path, config["whisper_model"]))
-        finally:
-            Path(tmp_path).unlink(missing_ok=True)
+        rich = await _transcribe_upload(file, config["whisper_model"])
+        transcripts.append(rich["text"])
+        item_metrics.append(metrics_mod.compute_metrics(rich["words"], rich["duration"]))
 
     if not any(t.strip() for t in transcripts):
         raise AppError(
@@ -168,12 +252,20 @@ async def toefl_attempt(
             code="empty_transcript",
         )
 
+    combined_metrics = metrics_mod.combine_metrics(item_metrics)
+    learner_context = coach.learner_context_for_llm(pid)
+
     if task_type == "listen_repeat":
-        feedback = llm_service.get_listen_repeat_feedback(config, prompt_item["title"], items, transcripts)
+        feedback = llm_service.get_listen_repeat_feedback(
+            config, prompt_item["title"], items, transcripts, learner_context
+        )
     else:
-        feedback = llm_service.get_interview_feedback(config, prompt_item["title"], items, transcripts)
+        feedback = llm_service.get_interview_feedback(
+            config, prompt_item["title"], items, transcripts, learner_context
+        )
 
     combined_transcript = "\n".join(f"{i + 1}. {t}" for i, t in enumerate(transcripts))
+    prompt_ref = f"toefl:{task_type}:{prompt_id}"
     session_id = db.insert_session(
         mode="toefl",
         task_type=task_type,
@@ -182,17 +274,208 @@ async def toefl_attempt(
         transcript=combined_transcript,
         feedback=feedback,
         score_band=feedback.get("score_band"),
+        metrics=combined_metrics,
+        profile_id=pid,
+        prompt_ref=prompt_ref,
     )
+    score_bonus = (feedback.get("score_band") or 0) * 5
+    db.insert_activity(pid, "toefl", gamification.xp_for("toefl", score_bonus), ref=f"session:{session_id}")
 
-    return {"session_id": session_id, "transcript": combined_transcript, "feedback": feedback}
+    previous_attempts = db.sessions_for_prompt(prompt_ref, pid)
+
+    return {
+        "session_id": session_id,
+        "transcript": combined_transcript,
+        "feedback": feedback,
+        "metrics": combined_metrics,
+        "previous_attempts": previous_attempts,
+    }
 
 
-# --- History ---------------------------------------------------------------
+# --- Shadowing -----------------------------------------------------------------
+
+
+@app.post("/api/shadowing/attempt")
+async def shadowing_attempt(
+    audio: UploadFile = File(...),
+    passage_id: str = Form(...),
+    sentence_index: int = Form(...),
+    profile_id: int | None = Form(None),
+):
+    config = load_config()
+    pid = _resolve_profile(profile_id)
+    passage = shadowing_content.get_passage(passage_id)
+    if not passage:
+        raise AppError("Passage not found.", code="not_found", status_code=404)
+    if not 0 <= sentence_index < len(passage["sentences"]):
+        raise AppError("Sentence index out of range.", code="bad_index")
+
+    target = passage["sentences"][sentence_index]
+    rich = await _transcribe_upload(audio, config["whisper_model"])
+    attempt_metrics = metrics_mod.compute_metrics(rich["words"], rich["duration"])
+
+    diff = alignment.align(target, rich["text"])
+    fluency = alignment.fluency_score(attempt_metrics, len(diff["target_words"]))
+
+    db.insert_shadowing_attempt(
+        pid, passage_id, sentence_index, target, rich["text"],
+        diff["accuracy"], fluency, diff, attempt_metrics,
+    )
+    db.insert_activity(pid, "shadowing_sentence", gamification.xp_for("shadowing_sentence"),
+                       ref=f"{passage_id}:{sentence_index}")
+
+    return {
+        "target": target,
+        "transcript": rich["text"],
+        "diff": diff,
+        "accuracy": diff["accuracy"],
+        "fluency_score": fluency,
+        "metrics": attempt_metrics,
+    }
+
+
+@app.get("/api/shadowing/progress")
+def get_shadowing_progress(profile_id: int | None = None):
+    pid = _resolve_profile(profile_id)
+    return db.shadowing_progress(pid)
+
+
+# --- Pronunciation lab ------------------------------------------------------------
+
+
+@app.post("/api/pronunciation/pair-attempt")
+async def pair_attempt(
+    audio: UploadFile = File(...),
+    pair_set_id: str = Form(...),
+    target_word: str = Form(...),
+    profile_id: int | None = Form(None),
+):
+    config = load_config()
+    pid = _resolve_profile(profile_id)
+    pair_set = pronunciation_content.find_pair_set(pair_set_id)
+    if not pair_set:
+        raise AppError("Minimal pair set not found.", code="not_found", status_code=404)
+
+    counterpart = None
+    for a, b in pair_set["pairs"]:
+        if target_word.lower() == a.lower():
+            counterpart = b
+            break
+        if target_word.lower() == b.lower():
+            counterpart = a
+            break
+    if counterpart is None:
+        raise AppError("Word is not part of this pair set.", code="bad_word")
+
+    rich = await _transcribe_upload(audio, config["whisper_model"])
+    heard_words = alignment.normalize_words(rich["text"])
+
+    target_norm = alignment.normalize_words(target_word)
+    counter_norm = alignment.normalize_words(counterpart)
+    said_target = any(w in heard_words for w in target_norm)
+    said_counter = any(w in heard_words for w in counter_norm)
+
+    if said_target and not said_counter:
+        verdict, correct = "correct", True
+        heard = target_word
+    elif said_counter and not said_target:
+        verdict, correct = "incorrect", False
+        heard = counterpart
+    elif said_target and said_counter:
+        verdict, correct = "unclear", None
+        heard = rich["text"]
+    else:
+        verdict, correct = "unclear", None
+        heard = rich["text"] or None
+
+    db.insert_pair_attempt(pid, pair_set_id, f"{pair_set['contrast']} ({pair_set['label']})",
+                           target_word, heard, correct)
+    if correct is not None:
+        db.insert_activity(pid, "pronunciation_pair", gamification.xp_for("pronunciation_pair"),
+                           ref=pair_set_id)
+
+    return {
+        "verdict": verdict,
+        "target_word": target_word,
+        "counterpart": counterpart,
+        "heard": heard,
+        "transcript": rich["text"],
+    }
+
+
+@app.post("/api/pronunciation/line-attempt")
+async def line_attempt(
+    audio: UploadFile = File(...),
+    lesson_id: str = Form(...),
+    line_index: int = Form(...),
+    profile_id: int | None = Form(None),
+):
+    config = load_config()
+    pid = _resolve_profile(profile_id)
+    lesson = pronunciation_content.find_lesson(lesson_id)
+    if not lesson:
+        raise AppError("Lesson not found.", code="not_found", status_code=404)
+    if not 0 <= line_index < len(lesson["practice_lines"]):
+        raise AppError("Line index out of range.", code="bad_index")
+
+    target = lesson["practice_lines"][line_index]["text"]
+    rich = await _transcribe_upload(audio, config["whisper_model"])
+    attempt_metrics = metrics_mod.compute_metrics(rich["words"], rich["duration"])
+    diff = alignment.align(target, rich["text"])
+    fluency = alignment.fluency_score(attempt_metrics, len(diff["target_words"]))
+
+    db.insert_shadowing_attempt(
+        pid, f"lesson:{lesson_id}", line_index, target, rich["text"],
+        diff["accuracy"], fluency, diff, attempt_metrics,
+    )
+    db.insert_activity(pid, "pronunciation_line", gamification.xp_for("pronunciation_line"),
+                       ref=f"{lesson_id}:{line_index}")
+
+    return {
+        "target": target,
+        "transcript": rich["text"],
+        "diff": diff,
+        "accuracy": diff["accuracy"],
+        "fluency_score": fluency,
+        "metrics": attempt_metrics,
+    }
+
+
+@app.get("/api/pronunciation/stats")
+def pronunciation_stats(profile_id: int | None = None):
+    pid = _resolve_profile(profile_id)
+    return db.pair_contrast_stats(pid)
+
+
+# --- Listening -----------------------------------------------------------------
+
+
+@app.post("/api/listening/submit")
+def listening_submit(payload: dict):
+    item_id = payload.get("item_id")
+    answers = payload.get("answers") or []
+    pid = _resolve_profile(payload.get("profile_id"))
+    result = listening_content.grade(item_id, answers)
+    if result is None:
+        raise AppError("Listening item not found.", code="not_found", status_code=404)
+    db.insert_listening_result(pid, item_id, result["score"], result["total"], answers)
+    bonus = result["score"] * 2
+    db.insert_activity(pid, "listening_quiz", gamification.xp_for("listening_quiz", bonus), ref=item_id)
+    return result
+
+
+@app.get("/api/listening/history")
+def get_listening_history(profile_id: int | None = None):
+    pid = _resolve_profile(profile_id)
+    return db.listening_history(pid)
+
+
+# --- History & analytics -----------------------------------------------------
 
 
 @app.get("/api/sessions")
-def sessions(mode: str | None = None, limit: int = 100):
-    return db.list_sessions(mode=mode, limit=limit)
+def sessions(mode: str | None = None, limit: int = 100, profile_id: int | None = None):
+    return db.list_sessions(mode=mode, limit=limit, profile_id=_resolve_profile(profile_id))
 
 
 @app.get("/api/sessions/{session_id}")
@@ -200,9 +483,21 @@ def session_detail(session_id: int):
     row = db.get_session(session_id)
     if not row:
         raise AppError("Session not found.", code="not_found", status_code=404)
+    if row.get("prompt_ref"):
+        row["other_attempts"] = db.sessions_for_prompt(row["prompt_ref"], row.get("profile_id"))
     return row
 
 
 @app.get("/api/stats/toefl")
-def toefl_stats():
-    return db.toefl_score_trend()
+def toefl_stats(profile_id: int | None = None):
+    return db.toefl_score_trend(_resolve_profile(profile_id))
+
+
+@app.get("/api/stats/dashboard")
+def dashboard_stats(profile_id: int | None = None):
+    return stats.dashboard(_resolve_profile(profile_id))
+
+
+@app.get("/api/coach/recommendations")
+def coach_recommendations(profile_id: int | None = None):
+    return coach.recommendations(_resolve_profile(profile_id))

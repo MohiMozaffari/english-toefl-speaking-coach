@@ -23,12 +23,16 @@ Respond with ONLY valid JSON (no markdown code fences, no commentary before or a
 EXACTLY this schema:
 {
   "encouragement": "one warm, encouraging sentence about their effort",
+  "what_went_well": "1-2 sentences naming the strongest things they did in THIS answer",
   "grammar_feedback": "2-4 simple sentences about grammar issues you noticed, if any",
   "vocabulary_feedback": "2-4 simple sentences about their vocabulary use and suggestions",
   "clarity_feedback": "2-4 simple sentences about how clear and organized their answer was",
   "improved_version": "a natural, correct rewritten version of roughly what they said, similar length",
-  "overall_tip": "one specific, actionable tip for next time"
-}"""
+  "overall_tip": "one specific, actionable tip for next time",
+  "category_scores": {"fluency": 4, "accuracy": 4, "coherence": 4}
+}
+"category_scores" values are integers 1-6 (6 = native-like) rating this answer's fluency (flow/pace), \
+accuracy (grammar+vocabulary correctness), and coherence (organization and relevance)."""
 
 # Reflects the redesigned TOEFL iBT Speaking section (launched January 21, 2026): two tasks,
 # automatically scored 1-6, no prep time. Listen and Repeat measures how closely the test-taker
@@ -51,15 +55,21 @@ this schema:
 {
   "score_band": 1,
   "score_reason": "one-line reason for the overall score",
+  "what_went_well": "1-2 sentences naming the strongest parts of this attempt",
+  "biggest_weakness": "the single most score-limiting problem, and WHY it costs points on this task",
   "accuracy": "1-2 sentences evaluating how closely wording matched the targets",
   "fluency": "1-2 sentences evaluating pacing and rhythm",
   "pronunciation_delivery": "1-2 sentences evaluating likely pronunciation/delivery based on the transcripts",
   "items": [
     {"target": "the exact target sentence", "said": "what the transcript shows they said", "match_quality": "exact, close, or different", "tip": "one short specific tip for this sentence"}
   ],
-  "focus_next": "one clear, specific thing to focus on next time"
+  "how_to_improve": "2-3 concrete practice steps, phrased as instructions",
+  "suggested_exercises": ["1-3 short exercise suggestions, e.g. 'Shadow 5 sentences daily at 0.75x speed'"],
+  "focus_next": "one clear, specific thing to focus on next time",
+  "category_scores": {"fluency": 4, "accuracy": 4, "pronunciation": 4}
 }
-"score_band" must be an integer from 1 to 6. "items" must contain exactly one entry per target sentence, in the same order given."""
+"score_band" must be an integer from 1 to 6. "category_scores" values are integers 1-6. "items" must \
+contain exactly one entry per target sentence, in the same order given."""
 
 INTERVIEW_SYSTEM_PROMPT = """You are an automated TOEFL iBT Speaking rater for the "Take an Interview" \
 task (2026 redesigned format). The test-taker was asked 4 questions in a row about one familiar topic, \
@@ -77,15 +87,21 @@ this schema:
 {
   "score_band": 1,
   "score_reason": "one-line reason for the overall score",
+  "what_went_well": "1-2 sentences naming the strongest parts of this attempt",
+  "biggest_weakness": "the single most score-limiting problem, and WHY it costs points on this task",
   "fluency": "1-2 sentences evaluating fluency",
   "accuracy": "1-2 sentences evaluating grammar and vocabulary",
   "coherence": "1-2 sentences evaluating organization and relevance",
   "items": [
     {"question": "the interview question", "said": "what the transcript shows they said", "better_response": "a stronger sample answer to this specific question, sized for about 45 seconds", "why": "brief reason this is stronger"}
   ],
-  "focus_next": "one clear, specific thing to focus on next time"
+  "how_to_improve": "2-3 concrete practice steps, phrased as instructions",
+  "suggested_exercises": ["1-3 short exercise suggestions, e.g. 'Answer one Interview set daily without pausing longer than 2 seconds'"],
+  "focus_next": "one clear, specific thing to focus on next time",
+  "category_scores": {"fluency": 4, "accuracy": 4, "coherence": 4}
 }
-"score_band" must be an integer from 1 to 6. "items" must contain exactly one entry per question, in the same order given."""
+"score_band" must be an integer from 1 to 6. "category_scores" values are integers 1-6. "items" must \
+contain exactly one entry per question, in the same order given."""
 
 
 def _client(config: dict, timeout: float = 90.0) -> OpenAI:
@@ -203,30 +219,38 @@ def _chat(config: dict, system_prompt: str, user_prompt: str) -> str:
     return content
 
 
-def get_general_feedback(config: dict, topic: str, transcript: str) -> dict:
+def _with_context(system_prompt: str, learner_context: str) -> str:
+    if learner_context:
+        return f"{system_prompt}\n\n{learner_context}"
+    return system_prompt
+
+
+def get_general_feedback(config: dict, topic: str, transcript: str, learner_context: str = "") -> dict:
     user_prompt = f"Topic given to the learner:\n{topic}\n\nTranscript of the learner's spoken answer:\n{transcript}"
-    raw = _chat(config, GENERAL_SYSTEM_PROMPT, user_prompt)
-    return _extract_json(raw)
+    raw = _chat(config, _with_context(GENERAL_SYSTEM_PROMPT, learner_context), user_prompt)
+    return _clamp_categories(_extract_json(raw))
 
 
-def get_listen_repeat_feedback(config: dict, set_title: str, sentences: list, transcripts: list) -> dict:
+def get_listen_repeat_feedback(
+    config: dict, set_title: str, sentences: list, transcripts: list, learner_context: str = ""
+) -> dict:
     pairs = "\n".join(
         f"{i + 1}. Target: \"{s}\"\n   Test-taker said: \"{t}\"" for i, (s, t) in enumerate(zip(sentences, transcripts))
     )
     user_prompt = f"Listen and Repeat set: {set_title}\n\n{pairs}"
-    raw = _chat(config, LISTEN_REPEAT_SYSTEM_PROMPT, user_prompt)
-    data = _extract_json(raw)
-    return _clamp_score(data)
+    raw = _chat(config, _with_context(LISTEN_REPEAT_SYSTEM_PROMPT, learner_context), user_prompt)
+    return _clamp_categories(_clamp_score(_extract_json(raw)))
 
 
-def get_interview_feedback(config: dict, set_title: str, questions: list, transcripts: list) -> dict:
+def get_interview_feedback(
+    config: dict, set_title: str, questions: list, transcripts: list, learner_context: str = ""
+) -> dict:
     pairs = "\n".join(
         f"{i + 1}. Question: \"{q}\"\n   Test-taker said: \"{t}\"" for i, (q, t) in enumerate(zip(questions, transcripts))
     )
     user_prompt = f"Take an Interview set: {set_title}\n\n{pairs}"
-    raw = _chat(config, INTERVIEW_SYSTEM_PROMPT, user_prompt)
-    data = _extract_json(raw)
-    return _clamp_score(data)
+    raw = _chat(config, _with_context(INTERVIEW_SYSTEM_PROMPT, learner_context), user_prompt)
+    return _clamp_categories(_clamp_score(_extract_json(raw)))
 
 
 def _clamp_score(data: dict) -> dict:
@@ -234,4 +258,19 @@ def _clamp_score(data: dict) -> dict:
         data["score_band"] = max(1, min(6, int(data.get("score_band", 1))))
     except (TypeError, ValueError):
         data["score_band"] = 1
+    return data
+
+
+def _clamp_categories(data: dict) -> dict:
+    scores = data.get("category_scores")
+    if isinstance(scores, dict):
+        cleaned = {}
+        for key, value in scores.items():
+            try:
+                cleaned[key] = max(1, min(6, int(value)))
+            except (TypeError, ValueError):
+                continue
+        data["category_scores"] = cleaned
+    else:
+        data["category_scores"] = {}
     return data

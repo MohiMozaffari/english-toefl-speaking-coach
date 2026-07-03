@@ -51,15 +51,40 @@ def is_installed() -> bool:
         return False
 
 
-def transcribe(file_path: str, whisper_model_size: str) -> str:
+def transcribe_rich(file_path: str, whisper_model_size: str) -> dict:
+    """Transcribe with word-level timestamps and confidences.
+
+    Returns {"text": str, "words": [{"word","start","end","probability"}], "duration": float}.
+    Word data feeds metrics.py (speaking rate, pauses, confidence proxy).
+    """
     model = _get_model(whisper_model_size)
     try:
-        segments, _info = model.transcribe(file_path, beam_size=5, vad_filter=True)
-        text = " ".join(seg.text.strip() for seg in segments).strip()
+        segments, info = model.transcribe(
+            file_path, beam_size=5, vad_filter=True, word_timestamps=True
+        )
+        words = []
+        parts = []
+        for seg in segments:
+            parts.append(seg.text.strip())
+            for w in seg.words or []:
+                words.append(
+                    {
+                        "word": w.word.strip(),
+                        "start": round(w.start, 3),
+                        "end": round(w.end, 3),
+                        "probability": round(w.probability, 4),
+                    }
+                )
+        text = " ".join(p for p in parts if p).strip()
+        duration = float(getattr(info, "duration", 0.0) or 0.0)
     except Exception as exc:  # noqa: BLE001
         raise AppError(
             f"Transcription failed: {exc}",
             code="transcription_failed",
             status_code=500,
         ) from exc
-    return text
+    return {"text": text, "words": words, "duration": duration}
+
+
+def transcribe(file_path: str, whisper_model_size: str) -> str:
+    return transcribe_rich(file_path, whisper_model_size)["text"]
