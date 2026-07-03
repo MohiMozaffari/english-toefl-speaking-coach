@@ -45,7 +45,7 @@ export default function Dashboard() {
   if (error) {
     return (
       <div className="error-box">
-        Could not load the dashboard. Is the backend running on http://localhost:8000? {"\n"}
+        Could not load the dashboard. Is the backend running on http://localhost:8001? {"\n"}
         {error}
       </div>
     );

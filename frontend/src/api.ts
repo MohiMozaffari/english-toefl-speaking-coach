@@ -22,7 +22,7 @@ import type {
   ToeflTopics,
 } from "./types";
 
-const BASE_URL = "http://localhost:8000";
+const BASE_URL = "http://localhost:8001";
 
 export class ApiError extends Error {
   code: string;

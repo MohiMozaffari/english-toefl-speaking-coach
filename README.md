@@ -73,7 +73,7 @@ pip install -r requirements.txt
 This installs `faster-whisper` for you. If you ever need it manually: `pip install faster-whisper`.
 
 ```bash
-uvicorn main:app --reload --port 8000
+uvicorn main:app --reload --port 8001
 ```
 
 The first time you submit a recording, faster-whisper downloads the selected model (tiny/base/small) to a local
@@ -104,7 +104,7 @@ XP goal.
 | Component   | URL                        | Notes                                               |
 |-------------|-----------------------------|------------------------------------------------------|
 | Frontend    | http://localhost:5173       | React + Vite dev server                             |
-| Backend     | http://localhost:8000       | FastAPI — whisper, metrics, alignment, coach, stats  |
+| Backend     | http://localhost:8001       | FastAPI — whisper, metrics, alignment, coach, stats  |
 | FreeLLMAPI  | http://localhost:3001       | Started separately by you (`docker compose up -d`)  |
 | SQLite DB   | `backend/data/app.db`       | Profiles + every attempt, created automatically      |
 | Settings    | `backend/data/config.json`  | Key/URL/model choices, local file only               |
