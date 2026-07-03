@@ -25,7 +25,9 @@ MAX_LOW_CONFIDENCE_WORDS = 8
 
 
 def _norm(word: str) -> str:
-    return re.sub(r"[^a-z']", "", word.lower().strip())
+    # Keep digits — whisper sometimes emits numbers as "2024" rather than spelling
+    # them out, and stripping digits would silently drop those words entirely.
+    return re.sub(r"[^a-z0-9']", "", word.lower().strip())
 
 
 def compute_metrics(words: list[dict], duration: float) -> dict:
