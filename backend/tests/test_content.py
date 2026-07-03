@@ -41,11 +41,37 @@ def test_find_toefl_prompt_missing_id_returns_none():
     assert content.find_toefl_prompt("bogus_task_type", "anything") is None
 
 
+def test_get_random_toefl_prompt_returns_a_valid_set():
+    prompt = content.get_random_toefl_prompt("interview")
+    assert prompt is not None
+    assert prompt["task"] == "interview"
+    assert len(prompt["questions"]) == 4
+
+
+def test_get_random_toefl_prompt_unknown_task_type_returns_none():
+    assert content.get_random_toefl_prompt("bogus_task_type") is None
+
+
 def test_shadowing_passages_have_no_empty_sentences():
-    for passage in shadowing_content.SHADOWING_PASSAGES:
+    for summary in shadowing_content.get_passages():
+        passage = shadowing_content.get_passage(summary["id"])
         assert passage["sentences"], passage["id"]
         for sentence in passage["sentences"]:
             assert sentence.strip(), f"empty sentence in {passage['id']}"
+
+
+def test_shadowing_passages_meet_minimum_variety():
+    summaries = shadowing_content.get_passages()
+    assert len(summaries) >= 8
+    difficulties = {p["difficulty"] for p in summaries}
+    assert difficulties <= {"beginner", "intermediate", "academic"}
+    assert len(difficulties) >= 3, "should have all three difficulty tiers represented"
+
+
+def test_shadowing_passage_has_accent_and_transcript():
+    summary = shadowing_content.get_passages()[0]
+    assert summary["preferred_accent"] in ("en-US", "en-GB", "en-AU")
+    assert summary["full_transcript"].strip()
 
 
 def test_shadowing_get_passages_omits_full_sentence_list():

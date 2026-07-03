@@ -1,5 +1,7 @@
 // Helpers around the browser's built-in speechSynthesis API (offline, en-US voice).
 
+import { ttsUrl } from "./api";
+
 let cachedVoices: SpeechSynthesisVoice[] = [];
 
 function loadVoices(): Promise<SpeechSynthesisVoice[]> {
@@ -95,4 +97,40 @@ export async function speakConversation(
 
 export function stopSpeaking() {
   window.speechSynthesis.cancel();
+}
+
+// Plays `text` with a real Microsoft neural voice (edge-tts, via the backend),
+// the same way Shadowing mode does, and automatically falls back to the local
+// speechSynthesis voice if that endpoint is unreachable (offline / blocked).
+// Returns a handle whose stop() halts whichever voice is currently playing.
+export function playNeural(
+  text: string,
+  { accent = "en-US", rate = 1, onEnd, onFallback }: { accent?: string; rate?: number; onEnd?: () => void; onFallback?: () => void } = {}
+): { stop: () => void } {
+  window.speechSynthesis.cancel();
+  const audio = new Audio(ttsUrl(text, accent));
+  audio.playbackRate = rate;
+  let done = false;
+
+  const fallBack = () => {
+    if (done) return;
+    done = true;
+    onFallback?.();
+    speak(text, { rate, onEnd });
+  };
+  audio.addEventListener("ended", () => {
+    if (done) return;
+    done = true;
+    onEnd?.();
+  });
+  audio.addEventListener("error", fallBack);
+  audio.play().catch(fallBack);
+
+  return {
+    stop: () => {
+      done = true;
+      audio.pause();
+      window.speechSynthesis.cancel();
+    },
+  };
 }

@@ -274,3 +274,65 @@ def _clamp_categories(data: dict) -> dict:
     else:
         data["category_scores"] = {}
     return data
+
+
+# --- Graceful fallbacks for unusable audio (no LLM call) ---------------------
+# Schema-compatible with the real feedback shapes above so the existing result
+# UI renders them without special-casing. "status"/"message" mark why. TOEFL's
+# score_band stays 1 (the real floor of this app's 1-6 scale) rather than an
+# out-of-range 0 -- the score charts, badges, and DB column all assume 1-6.
+
+
+def general_fallback_feedback(status: str) -> dict:
+    message = "No speech detected" if status == "no_speech" else "Response too short"
+    reason = (
+        "No speech was detected in the recording."
+        if status == "no_speech"
+        else "The recording was too short to evaluate."
+    )
+    return {
+        "status": status,
+        "message": message,
+        "encouragement": "No worries — let's try that again.",
+        "what_went_well": "",
+        "grammar_feedback": reason,
+        "vocabulary_feedback": "",
+        "clarity_feedback": "",
+        "improved_version": "",
+        "overall_tip": "Check that your microphone is working, then speak as soon as the recording starts.",
+        "category_scores": {},
+    }
+
+
+def toefl_fallback_feedback(status: str, task_type: str, items: list[str]) -> dict:
+    message = "No speech detected" if status == "no_speech" else "Response too short"
+    reason = (
+        "No speech was detected in your response."
+        if status == "no_speech"
+        else "The recording was too short to evaluate."
+    )
+    third_category = "pronunciation" if task_type == "listen_repeat" else "coherence"
+    data = {
+        "status": status,
+        "message": message,
+        "score_band": 1,
+        "score_reason": reason,
+        "what_went_well": "",
+        "biggest_weakness": f"{message} — there was nothing to score.",
+        "fluency": message,
+        "accuracy": message,
+        "how_to_improve": "Make sure your microphone is working, then try again and speak for the full response time.",
+        "suggested_exercises": [
+            "Test your microphone in Settings before starting a task.",
+            "Try a Shadowing sentence first to confirm your mic is picking up your voice.",
+        ],
+        "focus_next": "Confirm your microphone is working, then retry this set.",
+        "category_scores": {"fluency": 1, "accuracy": 1, third_category: 1},
+    }
+    if task_type == "listen_repeat":
+        data["pronunciation_delivery"] = message
+        data["items"] = [{"target": t, "said": "", "match_quality": "different", "tip": message} for t in items]
+    else:
+        data["coherence"] = message
+        data["items"] = [{"question": q, "said": "", "better_response": "", "why": message} for q in items]
+    return data

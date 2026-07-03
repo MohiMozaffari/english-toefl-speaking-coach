@@ -1,5 +1,7 @@
 data/config.json
 data/app.db
+data/toefl_coach.db
+data/tts_cache/
 data/*.wav
 data/*.webm
 __pycache__/

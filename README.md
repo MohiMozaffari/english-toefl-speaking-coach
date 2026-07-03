@@ -22,16 +22,21 @@ calls at all.
 ```
 backend/                Python / FastAPI
   main.py                 all HTTP routes
-  whisper_service.py       faster-whisper wrapper (word-level timestamps + confidence)
+  whisper_service.py       faster-whisper wrapper (word-level timestamps, confidence, graceful failure handling)
   metrics.py               local delivery metrics from those timestamps (WPM, pauses, fillers, vocabulary...)
   alignment.py              word-diff + fluency scoring for shadowing/pronunciation drills
-  llm_service.py            FreeLLMAPI client, prompts, JSON parsing, error mapping
+  llm_service.py            FreeLLMAPI client, prompts, JSON parsing, error mapping, no-speech/too-short fallbacks
+  tts_service.py            edge-tts neural voices for Shadowing (accent rotation, disk-cached generation)
   coach.py                  learner memory (built from real history) + rule-based recommendations
   gamification.py           XP, levels, streaks, daily goals, achievements
   stats.py                  dashboard aggregation (skill radar, trends, weaknesses)
-  db.py                     SQLite: profiles, sessions, shadowing/pair/listening results, activity log
+  db.py                     SQLite (data/app.db): profiles, sessions, shadowing/pair/listening results, activity log
+  database.py               SQLite (data/toefl_coach.db): shadowing_library + toefl_prompts content library
+  seed_data.json            source of truth for the content library
+  seed_db.py                 loads seed_data.json into data/toefl_coach.db (INSERT OR REPLACE, safe to re-run)
   content.py, shadowing_content.py, pronunciation_content.py, listening_content.py
-                             all practice content (topics, TOEFL sets, passages, IPA/minimal pairs, listening items)
+                             content access layer (TOEFL/shadowing now SQLite-backed; pronunciation/listening/
+                             general topics are still plain Python -- out of scope for the SQLite migration)
   tests/                    pytest suite for every pure-logic module above
 
 frontend/               React 18 + TypeScript + Vite
@@ -43,8 +48,10 @@ frontend/               React 18 + TypeScript + Vite
                              Listening, History, SessionDetail, Settings
 ```
 
-Nothing here talks to the public internet except `npm install` / `pip install` during setup, and the one-time
-faster-whisper model download. Once running, every request stays on `localhost`.
+Nothing here talks to the public internet except `npm install` / `pip install` during setup, the one-time
+faster-whisper model download, and Shadowing's neural voice playback (edge-tts calls Microsoft's cloud TTS
+service on cache misses — see [Design notes](#design-notes)). Everything else stays on `localhost`, including
+transcription, scoring, and the dashboard.
 
 ## Setup
 
@@ -68,9 +75,13 @@ python -m venv .venv
 source .venv/bin/activate
 
 pip install -r requirements.txt
+python seed_db.py
 ```
 
-This installs `faster-whisper` for you. If you ever need it manually: `pip install faster-whisper`.
+`pip install` gets you `faster-whisper` and `edge-tts`. `seed_db.py` loads `seed_data.json` into
+`data/toefl_coach.db` — **required on a fresh clone**, or the TOEFL and Shadowing pages will show no content
+(the database is gitignored since it's fully derived from the JSON). Safe to re-run any time after editing
+`seed_data.json` — it's `INSERT OR REPLACE`, not additive.
 
 ```bash
 uvicorn main:app --reload --port 8001
@@ -106,7 +117,9 @@ XP goal.
 | Frontend    | http://localhost:5173       | React + Vite dev server                             |
 | Backend     | http://localhost:8001       | FastAPI — whisper, metrics, alignment, coach, stats  |
 | FreeLLMAPI  | http://localhost:3001       | Started separately by you (`docker compose up -d`)  |
-| SQLite DB   | `backend/data/app.db`       | Profiles + every attempt, created automatically      |
+| Session DB  | `backend/data/app.db`       | Profiles + every attempt, created automatically      |
+| Content DB  | `backend/data/toefl_coach.db` | TOEFL prompts + shadowing passages, via `seed_db.py`|
+| TTS cache   | `backend/data/tts_cache/`   | Generated neural-voice audio, keyed by (voice, text) |
 | Settings    | `backend/data/config.json`  | Key/URL/model choices, local file only               |
 
 ## Features
@@ -126,23 +139,30 @@ members sharing one machine.
 Matches the redesigned TOEFL iBT Speaking section (launched January 21, 2026): two tasks, no prep time, scored
 1–6.
 - **Listen and Repeat** — 7 sentences per set (tied to a picture), heard once, repeated back immediately;
-  8–12 seconds per sentence, increasing difficulty.
-- **Take an Interview** — 4 questions per set on one familiar topic, answered immediately; 45 seconds each.
+  8–12 seconds per sentence, increasing difficulty. 4 sets.
+- **Take an Interview** — 4 questions per set on one familiar topic, answered immediately; 45 seconds each. 4 sets.
 
 Every attempt gets a strict-JSON rubric response: score band + reason, what went well, the single biggest
 weakness (and *why* it costs points), category sub-scores, a sentence/question-by-question breakdown, concrete
 "how to improve" steps with suggested exercises, and a focus point (auto-read aloud). Re-attempt any set and the
-result view shows every previous score for that exact prompt so you can see real progress.
+result view shows every previous score for that exact prompt so you can see real progress. Prompts live in
+`data/toefl_coach.db` (`toefl_prompts` table, grouped into sets by `set_id`) — add more in `seed_data.json` and
+re-run `seed_db.py`.
 
 ### General English Practice
 24 everyday topics across daily life, opinions, past experiences, future plans, and people/places. Record any
 length; get plain-language grammar/vocabulary/clarity feedback plus a rewritten "improved version" read aloud.
 
 ### Shadowing
-Sentence-by-sentence playback from 8 passages (beginner → advanced, including a TOEFL-style campus announcement),
-adjustable speed (0.5×–1.25×), a loop button for difficult sentences, and word-by-word diff highlighting
+Sentence-by-sentence playback from 11 passages (beginner / intermediate / academic, including a TOEFL-style campus
+announcement), read by real Microsoft neural voices via edge-tts — pick US, UK, or AU from the accent selector,
+each backed by 2-4 voices so it's not always the identical speaker (`tts_service.py`). Falls back to the browser's
+built-in voice automatically if the neural voice service is unreachable. Adjustable speed (0.5×–1.25×, applied as
+real audio playback rate), a loop button for difficult sentences, and word-by-word diff highlighting
 (matched / close / missing) after you record your repeat. Fluency scoring is a transparent local formula over pace,
 pauses, and filler words — see `alignment.fluency_score()`. Per-passage progress is tracked and shown as you browse.
+Content lives in `data/toefl_coach.db` (`shadowing_library` table) — add more passages in `seed_data.json` and
+re-run `seed_db.py`, no code changes needed.
 
 ### Pronunciation Lab
 American-English IPA chart (16 vowels/diphthongs, 12 consonants) — click any symbol to hear example words plus a
@@ -176,6 +196,14 @@ of the same prompt set for direct comparison.
 - **Mic permission denied** — "Microphone permission was denied. Please allow microphone access for this site in
   your browser settings and try again."
 - **faster-whisper not installed** — "faster-whisper is not installed. Run: pip install faster-whisper."
+- **Recording too short / crashed audio** — never a hard error. A 0-byte upload, a sub-second blip, or anything
+  that trips up the STT engine comes back as a normal graded result (`status: "too_short"`, the lowest real score
+  on the app's scale) instead of an error page, and is still saved to History.
+- **Complete silence** — also not an error. A full-length recording with nothing said comes back as
+  `status: "no_speech"`, saved to History like any other attempt, distinct from "too short" so you can tell the
+  difference later.
+- **Neural voice service unreachable** (Shadowing) — falls back to the browser's built-in voice automatically,
+  with a small inline note, rather than blocking playback.
 
 ## Running the tests
 
@@ -185,10 +213,11 @@ pip install -r requirements-dev.txt
 pytest tests/ -v
 ```
 
-66 tests cover the pure-logic modules: metrics (WPM/pause/filler/vocabulary/confidence math), alignment (word diff,
+96 tests cover the pure-logic modules: metrics (WPM/pause/filler/vocabulary/confidence math), alignment (word diff,
 contraction equivalence, fluency scoring), gamification (XP, levels, streak edge cases, achievement conditions),
-content integrity (every practice bank is well-formed), and DB round-trips (isolated temp SQLite file per test —
-never touches your real `app.db`).
+content integrity (every practice bank is well-formed), STT graceful-degradation classification (too-short vs.
+no-speech vs. ok, and the fallback feedback shapes), and DB round-trips against both `db.py` and `database.py`
+(isolated temp SQLite files per test — never touches your real `app.db` or `toefl_coach.db`).
 
 ```bash
 cd frontend
@@ -210,3 +239,17 @@ npm run typecheck
   the attempt is marked "unclear" and excluded from accuracy stats rather than guessed at.
 - **Why profiles have no authentication**: this is a single-machine local tool. Profiles exist to separate
   histories (e.g. multiple learners), not to gate access.
+- **Why `toefl_prompts` has more columns than the minimal id/task_type/question_text/preparation_time/
+  response_time**: the real TOEFL iBT Speaking format (redesigned Jan 2026) groups items into sets — 7 sentences
+  submitted together for one Listen-and-Repeat score, 4 questions together for one Interview score — so a row
+  needs `set_id`/`set_title`/`item_index` to be reassembled correctly, and `picture_caption` for Listen-and-Repeat's
+  on-screen image description. `preparation_time` is `0` on every row: the current format has no prep time at all.
+- **Why a silent or too-short recording scores 1, not 0**: this app's TOEFL score is clamped 1–6 everywhere (DB
+  column, charts, badges, the LLM prompts) to match the real exam's scale, which has no 0 band. A silent/too-short
+  attempt uses the real floor of that scale (1) with a `status` field explaining why, rather than an out-of-range
+  value that would need special-casing in every chart and badge that reads `score_band`.
+- **Why edge-tts is the one exception to "fully local"**: Shadowing specifically asked for realistic, varied
+  neural voices, which the browser's local `speechSynthesis` voice bank can't reliably provide across platforms.
+  edge-tts calls Microsoft's free cloud TTS endpoint on a cache miss; every other feature (transcription, scoring,
+  AI feedback playback, the whole rest of the app) still works fully offline, and Shadowing itself falls back to
+  `speechSynthesis` automatically if that endpoint is unreachable.

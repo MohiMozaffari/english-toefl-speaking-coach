@@ -70,6 +70,12 @@ async function postForm<T>(path: string, formData: FormData): Promise<T> {
 
 const profileQS = (profileId?: number) => (profileId ? `?profile_id=${profileId}` : "");
 
+/** URL for an <audio> element to fetch neural TTS directly (GET, browser-cacheable). */
+function ttsUrl(text: string, accent: string): string {
+  const params = new URLSearchParams({ text, accent });
+  return `${BASE_URL}/api/shadowing/tts?${params.toString()}`;
+}
+
 export const api = {
   // Settings & health
   getSettings: () => get<Settings>("/api/settings"),
@@ -120,4 +126,4 @@ export const api = {
     get<Recommendation[]>(`/api/coach/recommendations${profileQS(profileId)}`),
 };
 
-export { BASE_URL };
+export { BASE_URL, ttsUrl };

@@ -3,7 +3,7 @@ import { api } from "../api";
 import { useProfile } from "../contexts";
 import { useCountdown } from "../hooks/useCountdown";
 import { useRecorder } from "../hooks/useRecorder";
-import { speak, stopSpeaking } from "../speech";
+import { playNeural, speak, stopSpeaking } from "../speech";
 import { MetricChips, PageHeader, ReplayButton, ScoreBadge, scoreBadgeClass } from "../components/ui";
 import type { InterviewItem, ListenRepeatItem, ToeflAttemptResponse, ToeflSet, ToeflTopics } from "../types";
 
@@ -39,10 +39,17 @@ export default function ToeflPractice() {
   const countdown = useCountdown();
   const stopEarlyRef = useRef<(() => void) | null>(null);
   const runIdRef = useRef(0);
+  const playbackRef = useRef<{ stop: () => void } | null>(null);
+
+  const stopPrompt = () => {
+    playbackRef.current?.stop();
+    stopSpeaking();
+  };
 
   useEffect(() => {
     api.getToeflTopics().then(setTasksData).catch((err) => setLoadError(err.message));
-    return () => stopSpeaking();
+    return () => stopPrompt();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const chooseTaskType = (tt: TaskType) => {
@@ -79,8 +86,11 @@ export default function ToeflPractice() {
       if (runIdRef.current !== runId) return; // superseded by a newer run
       setItemIndex(i);
       setPhase("listening");
+      // Play the exam prompt in the same realistic neural voice as Shadowing
+      // (edge-tts), falling back to the browser voice if it's unreachable.
+      // Real TOEFL iBT is American English.
       await new Promise<void>((resolve) => {
-        speak(texts[i], { onEnd: resolve });
+        playbackRef.current = playNeural(texts[i], { accent: "en-US", onEnd: resolve });
       });
 
       if (runIdRef.current !== runId) return;
@@ -92,7 +102,14 @@ export default function ToeflPractice() {
         return;
       }
       const blob = await recordItem(durations[i]);
-      if (blob) blobs.push(blob);
+      // Always push one entry per item, even if the recorder produced nothing
+      // (e.g. it was already inactive at timer-expiry). An empty Blob still
+      // counts toward the set size the backend expects; the alternative --
+      // silently dropping the item -- shrinks the array by one and makes the
+      // *entire* submission get rejected for a count mismatch, losing every
+      // other item's real audio along with it. The backend classifies an empty
+      // item as "too short" for just that one item instead.
+      blobs.push(blob && blob.size > 0 ? blob : new Blob([], { type: "audio/webm" }));
     }
 
     if (runIdRef.current !== runId) return;
@@ -115,7 +132,7 @@ export default function ToeflPractice() {
 
   const reset = () => {
     runIdRef.current += 1;
-    stopSpeaking();
+    stopPrompt();
     setTaskType(null);
     setPromptSet(null);
     setStage("select_task");
@@ -125,7 +142,7 @@ export default function ToeflPractice() {
 
   const backToPrompts = () => {
     runIdRef.current += 1;
-    stopSpeaking();
+    stopPrompt();
     setPromptSet(null);
     setResult(null);
     setSubmitError(null);

@@ -1,0 +1,271 @@
+{
+  "_comment": "Source of truth for the SQLite content library. seed_db.py loads this and does INSERT OR REPLACE, so re-running it is always safe. difficulty must be one of: beginner, intermediate, academic. Add more entries here to scale the bank -- no code changes needed.",
+
+  "shadowing": [
+    {
+      "id": "sh_01",
+      "difficulty": "beginner",
+      "topic": "Morning Coffee Run",
+      "preferred_accent": "en-US",
+      "sentences": [
+        "Every morning, I stop by the coffee shop on my way to work.",
+        "The line is usually long, but it moves pretty fast.",
+        "I always order a medium coffee with a little milk.",
+        "The barista knows my name and my order by now.",
+        "It costs about three dollars, which adds up over time.",
+        "Still, that first sip makes the whole day feel easier."
+      ]
+    },
+    {
+      "id": "sh_02",
+      "difficulty": "beginner",
+      "topic": "Asking for Directions",
+      "preferred_accent": "en-US",
+      "sentences": [
+        "Excuse me, could you tell me how to get to the train station?",
+        "Sure, go straight down this street for two blocks.",
+        "Then turn left at the traffic light by the bank.",
+        "You'll see the station entrance right across from the park.",
+        "It's about a ten minute walk from here.",
+        "You can't miss it — there's a big clock above the doors."
+      ]
+    },
+    {
+      "id": "sh_09",
+      "difficulty": "beginner",
+      "topic": "Returning a Library Book",
+      "preferred_accent": "en-US",
+      "sentences": [
+        "Hi, I'd like to return this book, please.",
+        "No problem, I'll scan it right now.",
+        "It looks like it's two days late.",
+        "That's fine, the fine is only twenty cents a day.",
+        "Would you like a receipt for that?",
+        "No thanks, that's okay."
+      ]
+    },
+    {
+      "id": "sh_03",
+      "difficulty": "intermediate",
+      "topic": "The Study Group",
+      "preferred_accent": "en-US",
+      "sentences": [
+        "Our professor suggested we form study groups before the midterm.",
+        "At first, I wasn't sure it would actually help me.",
+        "I usually prefer to review the material on my own.",
+        "But explaining concepts to other people turned out to be powerful.",
+        "When you teach something, you quickly discover what you don't understand.",
+        "By the end of the semester, our group met twice a week.",
+        "My grade improved, and I made three good friends along the way."
+      ]
+    },
+    {
+      "id": "sh_04",
+      "difficulty": "intermediate",
+      "topic": "A Job Interview Tip",
+      "preferred_accent": "en-US",
+      "sentences": [
+        "Before any interview, research the company for at least an hour.",
+        "Look at their website, their products, and their recent news.",
+        "Prepare two or three thoughtful questions to ask at the end.",
+        "Interviewers remember candidates who seem genuinely curious.",
+        "Practice your answers out loud, not just in your head.",
+        "Speaking the words changes how confident they sound in the room."
+      ]
+    },
+    {
+      "id": "sh_05",
+      "difficulty": "intermediate",
+      "topic": "Why Cities Plant Trees",
+      "preferred_accent": "en-GB",
+      "sentences": [
+        "Many cities are planting thousands of trees along their streets.",
+        "Trees provide shade, which lowers summer temperatures significantly.",
+        "They also absorb rainwater and reduce the risk of flooding.",
+        "Studies show that green streets encourage people to walk more.",
+        "Property values often rise in neighborhoods with mature trees.",
+        "For a relatively small cost, trees deliver decades of benefits."
+      ]
+    },
+    {
+      "id": "sh_10",
+      "difficulty": "intermediate",
+      "topic": "Splitting the Dinner Bill",
+      "preferred_accent": "en-AU",
+      "sentences": [
+        "When the bill came, nobody wanted to deal with the math.",
+        "We ended up using an app to split it evenly.",
+        "It calculated everyone's share, including tax and tip.",
+        "One friend had only ordered water, so we adjusted his share down.",
+        "The whole process took less than a minute.",
+        "It saved us from an awkward conversation at the table."
+      ]
+    },
+    {
+      "id": "sh_06",
+      "difficulty": "academic",
+      "topic": "The Memory Lecture",
+      "preferred_accent": "en-GB",
+      "sentences": [
+        "Human memory doesn't work like a video recording of events.",
+        "Instead, each time we recall something, we partially reconstruct it.",
+        "That reconstruction can be influenced by our current emotions and beliefs.",
+        "This is why two people remember the same conversation so differently.",
+        "Researchers have even implanted entirely false memories in laboratory settings.",
+        "Understanding this fragility should make us more humble about certainty.",
+        "It also explains why eyewitness testimony is less reliable than juries assume."
+      ]
+    },
+    {
+      "id": "sh_07",
+      "difficulty": "academic",
+      "topic": "Negotiating the Rent",
+      "preferred_accent": "en-AU",
+      "sentences": [
+        "When my landlord announced a rent increase, I decided to negotiate.",
+        "I gathered listings for comparable apartments in the neighborhood.",
+        "Then I politely pointed out that I'd never paid late in three years.",
+        "Reliable tenants are valuable, and replacing one is expensive.",
+        "I proposed a smaller increase in exchange for signing a longer lease.",
+        "To my surprise, she accepted the offer almost immediately.",
+        "The whole conversation took fifteen minutes and saved me six hundred dollars."
+      ]
+    },
+    {
+      "id": "sh_08",
+      "difficulty": "academic",
+      "topic": "TOEFL-Style: Campus Announcement",
+      "preferred_accent": "en-US",
+      "sentences": [
+        "The university library will extend its hours during final examination week.",
+        "Beginning Monday, all three floors will remain open until two in the morning.",
+        "Additional staff will be available at the research help desk each evening.",
+        "Students are reminded to bring their identification cards for late entry.",
+        "Free coffee and snacks will be provided in the lobby after ten.",
+        "The administration hopes these changes will reduce stress during finals."
+      ]
+    },
+    {
+      "id": "sh_11",
+      "difficulty": "academic",
+      "topic": "The Bystander Effect",
+      "preferred_accent": "en-US",
+      "sentences": [
+        "Psychologists have long studied why people hesitate to help in emergencies.",
+        "One explanation is called the bystander effect.",
+        "The more witnesses present, the less likely any single person is to act.",
+        "Each bystander assumes someone else will take responsibility instead.",
+        "Researchers demonstrated this using staged emergencies in public spaces.",
+        "Awareness of the effect alone has been shown to reduce it somewhat.",
+        "Simply knowing the pattern exists can make people more likely to step in."
+      ]
+    }
+  ],
+
+  "toefl_prompts": [
+    {
+      "set_id": "lr_01",
+      "task_type": "listen_repeat",
+      "set_title": "Campus Library",
+      "picture_caption": "A university library reading room with students studying at desks",
+      "items": [
+        {"question_text": "The library opens at eight.", "response_time": 8},
+        {"question_text": "Students can borrow books for three weeks.", "response_time": 8},
+        {"question_text": "Please remember to return your books on time.", "response_time": 10},
+        {"question_text": "The quiet study room is located on the second floor.", "response_time": 10},
+        {"question_text": "Group study rooms must be reserved online in advance.", "response_time": 10},
+        {"question_text": "If you need help finding a book, ask the librarian at the front desk.", "response_time": 12},
+        {"question_text": "The library will be closed next Monday for the national holiday, so plan your visit accordingly.", "response_time": 12}
+      ]
+    },
+    {
+      "set_id": "lr_02",
+      "task_type": "listen_repeat",
+      "set_title": "Campus Cafeteria",
+      "picture_caption": "A busy campus cafeteria with a salad bar and students in a lunch line",
+      "items": [
+        {"question_text": "Lunch starts at noon.", "response_time": 8},
+        {"question_text": "The cafeteria accepts both cash and cards.", "response_time": 8},
+        {"question_text": "Vegetarian options are available every day.", "response_time": 10},
+        {"question_text": "The salad bar is next to the main entrance.", "response_time": 10},
+        {"question_text": "Students can use their meal plan for breakfast and dinner.", "response_time": 10},
+        {"question_text": "During finals week, the cafeteria stays open two hours later than usual.", "response_time": 12},
+        {"question_text": "If you have a food allergy, please inform the staff before ordering your meal.", "response_time": 12}
+      ]
+    },
+    {
+      "set_id": "lr_03",
+      "task_type": "listen_repeat",
+      "set_title": "Dormitory Move-in Day",
+      "picture_caption": "Students carrying boxes and suitcases into a dormitory on move-in day",
+      "items": [
+        {"question_text": "Move-in day is Saturday.", "response_time": 8},
+        {"question_text": "Bring your student ID to check in.", "response_time": 8},
+        {"question_text": "Volunteers will help carry your bags upstairs.", "response_time": 10},
+        {"question_text": "Each room comes with a bed, desk, and closet.", "response_time": 10},
+        {"question_text": "You can pick up your room key at the front office.", "response_time": 10},
+        {"question_text": "Parking permits for move-in day must be requested one week in advance.", "response_time": 12},
+        {"question_text": "New students should attend the orientation meeting in the main hall right after they finish unpacking.", "response_time": 12}
+      ]
+    },
+    {
+      "set_id": "lr_04",
+      "task_type": "listen_repeat",
+      "set_title": "Student Health Center",
+      "picture_caption": "A campus health center waiting room with a reception desk",
+      "items": [
+        {"question_text": "The clinic opens at nine.", "response_time": 8},
+        {"question_text": "Walk-in visits are welcome on weekdays.", "response_time": 8},
+        {"question_text": "Bring your insurance card to your appointment.", "response_time": 10},
+        {"question_text": "Flu shots are free for all enrolled students.", "response_time": 10},
+        {"question_text": "You can schedule appointments through the student portal.", "response_time": 10},
+        {"question_text": "The counseling office is located on the second floor of the same building.", "response_time": 12},
+        {"question_text": "Students who miss an appointment without canceling may be charged a small fee.", "response_time": 12}
+      ]
+    },
+    {
+      "set_id": "iv_01",
+      "task_type": "interview",
+      "set_title": "Free Time and Hobbies",
+      "items": [
+        {"question_text": "What do you usually do in your free time?", "response_time": 45},
+        {"question_text": "How did you first become interested in that activity?", "response_time": 45},
+        {"question_text": "Do you prefer doing this activity alone or with other people? Why?", "response_time": 45},
+        {"question_text": "How has this hobby changed the way you spend your weekends?", "response_time": 45}
+      ]
+    },
+    {
+      "set_id": "iv_02",
+      "task_type": "interview",
+      "set_title": "Travel and New Places",
+      "items": [
+        {"question_text": "Do you enjoy traveling to new places? Why or why not?", "response_time": 45},
+        {"question_text": "Tell me about a trip that you remember well.", "response_time": 45},
+        {"question_text": "Would you rather plan every detail of a trip in advance or travel spontaneously?", "response_time": 45},
+        {"question_text": "What is one place you would love to visit in the future, and why?", "response_time": 45}
+      ]
+    },
+    {
+      "set_id": "iv_03",
+      "task_type": "interview",
+      "set_title": "School and Learning",
+      "items": [
+        {"question_text": "What was your favorite subject in school?", "response_time": 45},
+        {"question_text": "Describe a teacher who made a strong impression on you.", "response_time": 45},
+        {"question_text": "Do you prefer studying alone or in a group? Why?", "response_time": 45},
+        {"question_text": "What is something new you would like to learn?", "response_time": 45}
+      ]
+    },
+    {
+      "set_id": "iv_04",
+      "task_type": "interview",
+      "set_title": "Food and Cooking",
+      "items": [
+        {"question_text": "Do you enjoy cooking? Why or why not?", "response_time": 45},
+        {"question_text": "What is a meal you often make or order?", "response_time": 45},
+        {"question_text": "Would you rather eat at a restaurant or cook at home? Why?", "response_time": 45},
+        {"question_text": "Tell me about a memorable meal you had recently.", "response_time": 45}
+      ]
+    }
+  ]
+}

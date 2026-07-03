@@ -1,4 +1,11 @@
-"""Static content banks: General English topics and TOEFL Speaking task prompts."""
+"""Content banks: General English topics (static) and TOEFL Speaking prompts (SQLite-backed).
+
+General English topics stay as plain Python data -- they're not part of the TOEFL
+prompt/shadowing migration requested for the content library (see database.py).
+TOEFL prompts are fetched from data/toefl_coach.db, seeded via seed_db.py.
+"""
+
+import database
 
 GENERAL_TOPICS = [
     # Daily life
@@ -32,131 +39,42 @@ GENERAL_TOPICS = [
     {"id": "g24", "category": "People & places", "prompt": "Describe your favorite place to relax."},
 ]
 
-# --- TOEFL Speaking content -------------------------------------------------
+
+def get_general_topics() -> list[dict]:
+    return GENERAL_TOPICS
+
+
+def find_general_topic(topic_id: str) -> dict | None:
+    for item in GENERAL_TOPICS:
+        if item["id"] == topic_id:
+            return item
+    return None
+
+
+# --- TOEFL Speaking content (SQLite-backed) -----------------------------------
 # Reflects the redesigned TOEFL iBT Speaking section that launched January 21, 2026:
 # two tasks, ~8 minutes total, 11 items, no prep time on either task.
 #   Listen and Repeat: 7 sentences per set, response time increases as sentences get longer.
 #   Take an Interview: 4 questions per set on one familiar topic, 45s response each.
 
-LISTEN_REPEAT_ITEM_SECONDS = [8, 8, 10, 10, 10, 12, 12]
-INTERVIEW_ITEM_SECONDS = [45, 45, 45, 45]
 
-LISTEN_AND_REPEAT_SETS = [
-    {
-        "id": "lr_01",
-        "task": "listen_repeat",
-        "title": "Campus Library",
-        "picture_caption": "A university library reading room with students studying at desks",
-        "sentences": [
-            "The library opens at eight.",
-            "Students can borrow books for three weeks.",
-            "Please remember to return your books on time.",
-            "The quiet study room is located on the second floor.",
-            "Group study rooms must be reserved online in advance.",
-            "If you need help finding a book, ask the librarian at the front desk.",
-            "The library will be closed next Monday for the national holiday, so plan your visit accordingly.",
-        ],
-    },
-    {
-        "id": "lr_02",
-        "task": "listen_repeat",
-        "title": "Campus Cafeteria",
-        "picture_caption": "A busy campus cafeteria with a salad bar and students in a lunch line",
-        "sentences": [
-            "Lunch starts at noon.",
-            "The cafeteria accepts both cash and cards.",
-            "Vegetarian options are available every day.",
-            "The salad bar is next to the main entrance.",
-            "Students can use their meal plan for breakfast and dinner.",
-            "During finals week, the cafeteria stays open two hours later than usual.",
-            "If you have a food allergy, please inform the staff before ordering your meal.",
-        ],
-    },
-    {
-        "id": "lr_03",
-        "task": "listen_repeat",
-        "title": "Dormitory Move-in Day",
-        "picture_caption": "Students carrying boxes and suitcases into a dormitory on move-in day",
-        "sentences": [
-            "Move-in day is Saturday.",
-            "Bring your student ID to check in.",
-            "Volunteers will help carry your bags upstairs.",
-            "Each room comes with a bed, desk, and closet.",
-            "You can pick up your room key at the front office.",
-            "Parking permits for move-in day must be requested one week in advance.",
-            "New students should attend the orientation meeting in the main hall right after they finish unpacking.",
-        ],
-    },
-]
-
-INTERVIEW_SETS = [
-    {
-        "id": "iv_01",
-        "task": "interview",
-        "title": "Free Time and Hobbies",
-        "questions": [
-            "What do you usually do in your free time?",
-            "How did you first become interested in that activity?",
-            "Do you prefer doing this activity alone or with other people? Why?",
-            "How has this hobby changed the way you spend your weekends?",
-        ],
-    },
-    {
-        "id": "iv_02",
-        "task": "interview",
-        "title": "Travel and New Places",
-        "questions": [
-            "Do you enjoy traveling to new places? Why or why not?",
-            "Tell me about a trip that you remember well.",
-            "Would you rather plan every detail of a trip in advance or travel spontaneously?",
-            "What is one place you would love to visit in the future, and why?",
-        ],
-    },
-    {
-        "id": "iv_03",
-        "task": "interview",
-        "title": "School and Learning",
-        "questions": [
-            "What was your favorite subject in school?",
-            "Describe a teacher who made a strong impression on you.",
-            "Do you prefer studying alone or in a group? Why?",
-            "What is something new you would like to learn?",
-        ],
-    },
-]
-
-TOEFL_TIMING = {
-    "listen_repeat": {"item_seconds": LISTEN_REPEAT_ITEM_SECONDS},
-    "interview": {"item_seconds": INTERVIEW_ITEM_SECONDS},
-}
-
-
-def get_general_topics():
-    return GENERAL_TOPICS
-
-
-def get_toefl_tasks():
+def get_toefl_tasks() -> dict:
     return {
-        "listen_repeat": LISTEN_AND_REPEAT_SETS,
-        "interview": INTERVIEW_SETS,
+        "listen_repeat": database.fetch_toefl_sets("listen_repeat"),
+        "interview": database.fetch_toefl_sets("interview"),
     }
 
 
-def get_toefl_timing():
-    return TOEFL_TIMING
+def get_toefl_timing() -> dict:
+    return {
+        "listen_repeat": {"item_seconds": database.fetch_toefl_response_times("listen_repeat")},
+        "interview": {"item_seconds": database.fetch_toefl_response_times("interview")},
+    }
 
 
-def find_toefl_prompt(task_type: str, prompt_id: str):
-    tasks = get_toefl_tasks()
-    items = tasks.get(task_type, [])
-    for item in items:
-        if item["id"] == prompt_id:
-            return item
-    return None
+def find_toefl_prompt(task_type: str, prompt_id: str) -> dict | None:
+    return database.fetch_toefl_set(task_type, prompt_id)
 
 
-def find_general_topic(topic_id: str):
-    for item in GENERAL_TOPICS:
-        if item["id"] == topic_id:
-            return item
-    return None
+def get_random_toefl_prompt(task_type: str) -> dict | None:
+    return database.get_random_toefl_prompt(task_type)

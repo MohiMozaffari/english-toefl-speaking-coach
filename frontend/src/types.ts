@@ -175,11 +175,15 @@ export interface DashboardData {
   weak_contrasts: { contrast: string; attempts: number; correct: number; accuracy: number }[];
 }
 
+export type Accent = "en-US" | "en-GB" | "en-AU";
+
 export interface PassageSummary {
   id: string;
   title: string;
-  difficulty: "beginner" | "intermediate" | "advanced";
+  difficulty: "beginner" | "intermediate" | "academic";
   category: string;
+  full_transcript: string;
+  preferred_accent: Accent;
   audio_url: string | null;
   sentence_count: number;
 }

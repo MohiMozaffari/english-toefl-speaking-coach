@@ -4,11 +4,12 @@ from typing import List
 
 from fastapi import FastAPI, File, Form, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import FileResponse, JSONResponse
 
 import alignment
 import coach
 import content
+import database
 import db
 import gamification
 import listening_content
@@ -17,6 +18,7 @@ import metrics as metrics_mod
 import pronunciation_content
 import shadowing_content
 import stats
+import tts_service
 import whisper_service
 from config import load_config, save_config
 from errors import AppError
@@ -34,6 +36,7 @@ app.add_middleware(
 @app.on_event("startup")
 def _startup():
     db.init_db()
+    database.init_db()
 
 
 @app.exception_handler(AppError)
@@ -130,6 +133,23 @@ def shadowing_passage(passage_id: str):
     return passage
 
 
+@app.get("/api/shadowing/accents")
+def shadowing_accents():
+    return tts_service.VOICES_BY_ACCENT
+
+
+@app.get("/api/shadowing/tts")
+async def shadowing_tts(text: str, accent: str = tts_service.DEFAULT_ACCENT):
+    if accent not in tts_service.VOICES_BY_ACCENT:
+        raise AppError(f"Unknown accent: {accent}", code="bad_accent")
+    result = await tts_service.synthesize(text, accent)
+    return FileResponse(
+        result["audio_path"],
+        media_type="audio/mpeg",
+        headers={"Cache-Control": "public, max-age=31536000", "X-TTS-Voice": result["voice"]},
+    )
+
+
 @app.get("/api/pronunciation/content")
 def pronunciation_lab():
     return pronunciation_content.get_lab_content()
@@ -152,10 +172,13 @@ def listening_item(item_id: str):
 
 
 async def _save_upload(audio: UploadFile) -> str:
+    # A 0-byte upload (e.g. a MediaRecorder blip that never produced a chunk) is
+    # just the extreme end of "too short" -- write it through and let
+    # transcribe_rich() + classify_transcription() turn it into the same
+    # graceful too-short result as a very brief real recording, instead of a
+    # separate hard error path.
     suffix = Path(audio.filename or "audio.webm").suffix or ".webm"
     data = await audio.read()
-    if not data:
-        raise AppError("No audio data received. Please record an answer before submitting.", code="empty_audio")
     tmp = tempfile.NamedTemporaryFile(delete=False, suffix=suffix)
     try:
         tmp.write(data)
@@ -185,16 +208,18 @@ async def general_attempt(
     config = load_config()
     pid = _resolve_profile(profile_id)
     rich = await _transcribe_upload(audio, config["whisper_model"])
-
-    if not rich["text"].strip():
-        raise AppError(
-            "No speech was detected in the recording. Please try again and speak clearly into the microphone.",
-            code="empty_transcript",
-        )
-
     attempt_metrics = metrics_mod.compute_metrics(rich["words"], rich["duration"])
-    learner_context = coach.learner_context_for_llm(pid)
-    feedback = llm_service.get_general_feedback(config, topic_prompt, rich["text"], learner_context)
+    status = whisper_service.classify_transcription(rich)
+
+    if status == "ok":
+        learner_context = coach.learner_context_for_llm(pid)
+        feedback = llm_service.get_general_feedback(config, topic_prompt, rich["text"], learner_context)
+    else:
+        # Too-short/crashed audio or genuine silence: a real, gradeable (if very
+        # low) outcome, not an error -- skip the LLM call, there's nothing to
+        # evaluate, and return a normal 200 so it shows up in history like any
+        # other attempt.
+        feedback = llm_service.general_fallback_feedback(status)
 
     session_id = db.insert_session(
         mode="general",
@@ -208,7 +233,8 @@ async def general_attempt(
         profile_id=pid,
         prompt_ref=f"general:{topic_id}",
     )
-    db.insert_activity(pid, "general", gamification.xp_for("general"), ref=f"session:{session_id}")
+    if status == "ok":
+        db.insert_activity(pid, "general", gamification.xp_for("general"), ref=f"session:{session_id}")
 
     return {"session_id": session_id, "transcript": rich["text"], "feedback": feedback, "metrics": attempt_metrics}
 
@@ -241,31 +267,42 @@ async def toefl_attempt(
 
     transcripts = []
     item_metrics = []
+    item_statuses = []
     for file in audio:
         rich = await _transcribe_upload(file, config["whisper_model"])
-        transcripts.append(rich["text"])
         item_metrics.append(metrics_mod.compute_metrics(rich["words"], rich["duration"]))
-
-    if not any(t.strip() for t in transcripts):
-        raise AppError(
-            "No speech was detected in any of the recordings. Please try again and speak clearly into the microphone.",
-            code="empty_transcript",
-        )
+        item_status = whisper_service.classify_transcription(rich)
+        item_statuses.append(item_status)
+        if item_status == "ok":
+            transcripts.append(rich["text"])
+        else:
+            # Keep a placeholder in the transcript sent to the LLM so a partially
+            # unusable set (e.g. one dropped item out of seven) still reads
+            # coherently, instead of an empty string next to real answers.
+            transcripts.append("[No usable audio for this item]")
 
     combined_metrics = metrics_mod.combine_metrics(item_metrics)
-    learner_context = coach.learner_context_for_llm(pid)
+    prompt_ref = f"toefl:{task_type}:{prompt_id}"
 
-    if task_type == "listen_repeat":
-        feedback = llm_service.get_listen_repeat_feedback(
-            config, prompt_item["title"], items, transcripts, learner_context
-        )
+    all_too_short = all(s == "too_short" for s in item_statuses)
+    if all_too_short:
+        feedback = llm_service.toefl_fallback_feedback("too_short", task_type, items)
+    elif all(s != "ok" for s in item_statuses):
+        # Every item was either silent or too short (but not literally every one
+        # crashed) -- still a whole-set "nothing to score" outcome.
+        feedback = llm_service.toefl_fallback_feedback("no_speech", task_type, items)
     else:
-        feedback = llm_service.get_interview_feedback(
-            config, prompt_item["title"], items, transcripts, learner_context
-        )
+        learner_context = coach.learner_context_for_llm(pid)
+        if task_type == "listen_repeat":
+            feedback = llm_service.get_listen_repeat_feedback(
+                config, prompt_item["title"], items, transcripts, learner_context
+            )
+        else:
+            feedback = llm_service.get_interview_feedback(
+                config, prompt_item["title"], items, transcripts, learner_context
+            )
 
     combined_transcript = "\n".join(f"{i + 1}. {t}" for i, t in enumerate(transcripts))
-    prompt_ref = f"toefl:{task_type}:{prompt_id}"
     session_id = db.insert_session(
         mode="toefl",
         task_type=task_type,
@@ -278,8 +315,9 @@ async def toefl_attempt(
         profile_id=pid,
         prompt_ref=prompt_ref,
     )
-    score_bonus = (feedback.get("score_band") or 0) * 5
-    db.insert_activity(pid, "toefl", gamification.xp_for("toefl", score_bonus), ref=f"session:{session_id}")
+    if any(s == "ok" for s in item_statuses):
+        score_bonus = (feedback.get("score_band") or 0) * 5
+        db.insert_activity(pid, "toefl", gamification.xp_for("toefl", score_bonus), ref=f"session:{session_id}")
 
     previous_attempts = db.sessions_for_prompt(prompt_ref, pid)
 

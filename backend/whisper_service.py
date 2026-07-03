@@ -11,6 +11,13 @@ PIP_INSTALL_HINT = "pip install faster-whisper"
 
 VALID_SIZES = {"tiny", "base", "small"}
 
+# Below this, faster-whisper occasionally throws on genuinely tiny/degenerate
+# audio buffers (a few frames of a mic blip, a corrupted near-empty webm chunk).
+# transcribe_rich() never lets that propagate as a 500; callers use the
+# "failed"/"duration" fields to decide whether to treat it as "too short"
+# rather than attempting to show real feedback on nothing.
+MIN_USABLE_AUDIO_SECONDS = 7.0
+
 
 def _get_model(size: str):
     if size not in VALID_SIZES:
@@ -54,8 +61,15 @@ def is_installed() -> bool:
 def transcribe_rich(file_path: str, whisper_model_size: str) -> dict:
     """Transcribe with word-level timestamps and confidences.
 
-    Returns {"text": str, "words": [{"word","start","end","probability"}], "duration": float}.
-    Word data feeds metrics.py (speaking rate, pauses, confidence proxy).
+    Returns {"text", "words", "duration", "failed"}. "words" feeds metrics.py
+    (speaking rate, pauses, confidence proxy).
+
+    Never raises for a failed transcription attempt itself -- very short or
+    degenerate audio can trip up the STT engine, and a hard 500 there used to
+    surface as a raw error instead of a gradeable (if very low) result. Callers
+    use "failed" + "duration" to decide between a "too short" penalty and a
+    genuine "no speech detected" outcome. Model load/install problems (a real
+    setup issue, not a per-recording one) still raise AppError as before.
     """
     model = _get_model(whisper_model_size)
     try:
@@ -77,14 +91,31 @@ def transcribe_rich(file_path: str, whisper_model_size: str) -> dict:
                 )
         text = " ".join(p for p in parts if p).strip()
         duration = float(getattr(info, "duration", 0.0) or 0.0)
-    except Exception as exc:  # noqa: BLE001
-        raise AppError(
-            f"Transcription failed: {exc}",
-            code="transcription_failed",
-            status_code=500,
-        ) from exc
-    return {"text": text, "words": words, "duration": duration}
+    except Exception:  # noqa: BLE001
+        return {"text": "", "words": [], "duration": 0.0, "failed": True}
+    return {"text": text, "words": words, "duration": duration, "failed": False}
 
 
 def transcribe(file_path: str, whisper_model_size: str) -> str:
     return transcribe_rich(file_path, whisper_model_size)["text"]
+
+
+def classify_transcription(rich: dict, min_duration: float = MIN_USABLE_AUDIO_SECONDS) -> str:
+    """Sort a transcription result into "ok" | "too_short" | "no_speech".
+
+    - "too_short": the STT engine failed outright, or the clip was both brief
+      AND produced no recognizable words -- treat as unusable input, not a
+      scoreable silent answer (a legitimate quick-but-correct answer to a short
+      prompt still has real words and is NOT flagged here, even if brief).
+    - "no_speech": a normal-length clip that came back completely empty --
+      genuine silence.
+    - "ok": anything with real transcribed words.
+    """
+    if rich.get("failed"):
+        return "too_short"
+    has_text = bool(rich["text"].strip())
+    if not has_text and rich["duration"] < min_duration:
+        return "too_short"
+    if not has_text:
+        return "no_speech"
+    return "ok"

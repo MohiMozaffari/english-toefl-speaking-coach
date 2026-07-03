@@ -1,14 +1,19 @@
-import { useEffect, useMemo, useState } from "react";
-import { api } from "../api";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { api, ttsUrl } from "../api";
 import { useProfile } from "../contexts";
 import { useRecorder } from "../hooks/useRecorder";
 import { speak, stopSpeaking } from "../speech";
 import { DiffText, LoadingCard, MetricChips, PageHeader } from "../components/ui";
-import type { Passage, PassageSummary, ShadowingProgressRow, ShadowingResult } from "../types";
+import type { Accent, Passage, PassageSummary, ShadowingProgressRow, ShadowingResult } from "../types";
 
 const RATES = [0.5, 0.75, 1, 1.25];
+const ACCENTS: { value: Accent; label: string }[] = [
+  { value: "en-US", label: "🇺🇸 US" },
+  { value: "en-GB", label: "🇬🇧 UK" },
+  { value: "en-AU", label: "🇦🇺 AU" },
+];
 
-const DIFF_BADGE: Record<string, string> = { beginner: "good", intermediate: "warn", advanced: "bad" };
+const DIFF_BADGE: Record<string, string> = { beginner: "good", intermediate: "warn", academic: "bad" };
 
 export default function Shadowing() {
   const { profile } = useProfile();
@@ -18,18 +23,25 @@ export default function Shadowing() {
   const [passage, setPassage] = useState<Passage | null>(null);
   const [index, setIndex] = useState(0);
   const [rate, setRate] = useState(1);
+  const [accent, setAccent] = useState<Accent>("en-US");
   const [loop, setLoop] = useState(false);
   const [playing, setPlaying] = useState(false);
+  const [usingFallbackVoice, setUsingFallbackVoice] = useState(false);
   const [result, setResult] = useState<ShadowingResult | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const recorder = useRecorder();
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const playTokenRef = useRef(0);
 
   useEffect(() => {
     api.getPassages().then(setPassages).catch((err) => setError(err.message));
     refreshProgress();
-    return () => stopSpeaking();
+    return () => {
+      stopSpeaking();
+      audioRef.current?.pause();
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [profile?.id]);
 
@@ -54,6 +66,7 @@ export default function Shadowing() {
     try {
       const full = await api.getPassage(id);
       setPassage(full);
+      setAccent(full.preferred_accent);
       setIndex(0);
       setResult(null);
     } catch (err) {
@@ -63,17 +76,46 @@ export default function Shadowing() {
 
   const sentence = passage?.sentences[index] ?? "";
 
+  // Plays one sentence via the neural-voice endpoint (real Microsoft neural
+  // voices, picked per accent). Falls back to the browser's speechSynthesis if
+  // that endpoint can't be reached (offline, or edge-tts blocked on this
+  // network) so shadowing still works without internet.
+  const playOnceNeural = (): Promise<void> =>
+    new Promise((resolve) => {
+      const audio = audioRef.current;
+      if (!audio) {
+        resolve();
+        return;
+      }
+      audio.src = ttsUrl(sentence, accent);
+      audio.playbackRate = rate;
+      const onDone = () => {
+        audio.removeEventListener("ended", onDone);
+        audio.removeEventListener("error", onError);
+        resolve();
+      };
+      const onError = () => {
+        audio.removeEventListener("ended", onDone);
+        audio.removeEventListener("error", onError);
+        setUsingFallbackVoice(true);
+        speak(sentence, { rate, onEnd: resolve });
+      };
+      audio.addEventListener("ended", onDone);
+      audio.addEventListener("error", onError);
+      audio.play().catch(onError);
+    });
+
   const playLooped = async () => {
     stopSpeaking();
+    audioRef.current?.pause();
+    setUsingFallbackVoice(false);
     setPlaying(true);
-    const once = () =>
-      new Promise<void>((resolve) => {
-        speak(sentence, { rate, onEnd: () => resolve() });
-      });
+    const token = ++playTokenRef.current;
     // Loop plays up to 5 repeats; a plain play is a single pass.
     const repeats = loop ? 5 : 1;
     for (let i = 0; i < repeats; i++) {
-      await once();
+      await playOnceNeural();
+      if (playTokenRef.current !== token) return; // superseded (user navigated away)
       if (!loop) break;
     }
     setPlaying(false);
@@ -81,6 +123,8 @@ export default function Shadowing() {
 
   const startRecording = async () => {
     stopSpeaking();
+    audioRef.current?.pause();
+    playTokenRef.current++;
     setPlaying(false);
     setResult(null);
     setError(null);
@@ -109,6 +153,9 @@ export default function Shadowing() {
 
   const goTo = (i: number) => {
     stopSpeaking();
+    audioRef.current?.pause();
+    playTokenRef.current++;
+    setPlaying(false);
     setIndex(i);
     setResult(null);
     recorder.reset();
@@ -124,7 +171,7 @@ export default function Shadowing() {
         />
         {error && <div className="error-box">{error}</div>}
         <div className="row" style={{ marginBottom: 14 }}>
-          {["all", "beginner", "intermediate", "advanced"].map((d) => (
+          {["all", "beginner", "intermediate", "academic"].map((d) => (
             <button key={d} type="button" className={filter === d ? "primary small" : "small"} onClick={() => setFilter(d)}>
               {d === "all" ? "All levels" : d}
             </button>
@@ -174,7 +221,7 @@ export default function Shadowing() {
         title={passage.title}
         subtitle={`Sentence ${index + 1} of ${passage.sentences.length}`}
         actions={
-          <button type="button" onClick={() => { stopSpeaking(); setPassage(null); refreshProgress(); }}>
+          <button type="button" onClick={() => { stopSpeaking(); audioRef.current?.pause(); setPassage(null); refreshProgress(); }}>
             ← All passages
           </button>
         }
@@ -201,6 +248,7 @@ export default function Shadowing() {
       </div>
 
       <div className="card">
+        <audio ref={audioRef} preload="none" style={{ display: "none" }} />
         <p style={{ fontSize: "1.18rem", lineHeight: 1.6, marginTop: 0 }}>{sentence}</p>
         {bestForCurrent != null && (
           <p className="muted small">Your best on this sentence: {bestForCurrent}%</p>
@@ -210,6 +258,18 @@ export default function Shadowing() {
           <button type="button" className="primary" onClick={playLooped} disabled={playing || recorder.status === "recording"}>
             {playing ? "🔊 Playing…" : "▶ Play"}
           </button>
+          <div className="row" role="group" aria-label="Voice accent">
+            {ACCENTS.map((a) => (
+              <button
+                key={a.value}
+                type="button"
+                className={`small ${accent === a.value ? "primary" : ""}`}
+                onClick={() => setAccent(a.value)}
+              >
+                {a.label}
+              </button>
+            ))}
+          </div>
           <div className="row" role="group" aria-label="Playback speed">
             {RATES.map((r) => (
               <button key={r} type="button" className={`small ${rate === r ? "primary" : ""}`} onClick={() => setRate(r)}>
@@ -222,6 +282,11 @@ export default function Shadowing() {
             Loop
           </label>
         </div>
+        {usingFallbackVoice && (
+          <p className="faint small" style={{ marginTop: 6, marginBottom: 0 }}>
+            Neural voice service unreachable — using your browser's built-in voice instead.
+          </p>
+        )}
 
         {recorder.error && <div className="error-box">{recorder.error}</div>}
         {error && <div className="error-box">{error}</div>}
