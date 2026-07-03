@@ -1,17 +1,19 @@
 import { useCallback, useRef, useState } from "react";
 
+export type RecorderStatus = "idle" | "recording" | "stopped";
+
 // Wraps the browser MediaRecorder API for capturing microphone audio.
 export function useRecorder() {
-  const [status, setStatus] = useState("idle"); // idle | recording | stopped
-  const [error, setError] = useState(null);
+  const [status, setStatus] = useState<RecorderStatus>("idle");
+  const [error, setError] = useState<string | null>(null);
   const [elapsed, setElapsed] = useState(0);
 
-  const mediaRecorderRef = useRef(null);
-  const chunksRef = useRef([]);
-  const streamRef = useRef(null);
-  const timerRef = useRef(null);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const chunksRef = useRef<Blob[]>([]);
+  const streamRef = useRef<MediaStream | null>(null);
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  const start = useCallback(async () => {
+  const start = useCallback(async (): Promise<boolean> => {
     setError(null);
     setElapsed(0);
     chunksRef.current = [];
@@ -29,21 +31,22 @@ export function useRecorder() {
       timerRef.current = setInterval(() => setElapsed((s) => s + 1), 1000);
       return true;
     } catch (err) {
-      if (err.name === "NotAllowedError" || err.name === "PermissionDeniedError") {
+      const e = err as DOMException;
+      if (e.name === "NotAllowedError" || e.name === "PermissionDeniedError") {
         setError(
           "Microphone permission was denied. Please allow microphone access for this site in your browser settings and try again."
         );
-      } else if (err.name === "NotFoundError") {
+      } else if (e.name === "NotFoundError") {
         setError("No microphone was found. Please connect a microphone and try again.");
       } else {
-        setError(`Could not access the microphone: ${err.message}`);
+        setError(`Could not access the microphone: ${e.message}`);
       }
       setStatus("idle");
       return false;
     }
   }, []);
 
-  const stop = useCallback(() => {
+  const stop = useCallback((): Promise<Blob | null> => {
     return new Promise((resolve) => {
       const recorder = mediaRecorderRef.current;
       if (timerRef.current) {

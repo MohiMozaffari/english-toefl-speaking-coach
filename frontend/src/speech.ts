@@ -1,8 +1,8 @@
-// Helpers around the browser's built-in speechSynthesis API.
+// Helpers around the browser's built-in speechSynthesis API (offline, en-US voice).
 
-let cachedVoices = [];
+let cachedVoices: SpeechSynthesisVoice[] = [];
 
-function loadVoices() {
+function loadVoices(): Promise<SpeechSynthesisVoice[]> {
   return new Promise((resolve) => {
     const voices = window.speechSynthesis.getVoices();
     if (voices.length) {
@@ -21,9 +21,10 @@ function loadVoices() {
   });
 }
 
-function pickUsEnglishVoice(voices) {
+function pickUsEnglishVoice(voices: SpeechSynthesisVoice[]): SpeechSynthesisVoice | null {
   if (!voices || !voices.length) return null;
-  const notNonUs = (v) => !/UK|United Kingdom|AU|Australia|IN|India|ZA|South Africa|GB/i.test(v.name);
+  const notNonUs = (v: SpeechSynthesisVoice) =>
+    !/UK|United Kingdom|AU|Australia|IN|India|ZA|South Africa|GB/i.test(v.name);
   const exact = voices.find((v) => v.lang === "en-US" && notNonUs(v));
   if (exact) return exact;
   const anyEnUs = voices.find((v) => v.lang === "en-US");
@@ -32,12 +33,18 @@ function pickUsEnglishVoice(voices) {
   return anyEn || voices[0];
 }
 
-export async function getUsVoice() {
+export async function getUsVoice(): Promise<SpeechSynthesisVoice | null> {
   const voices = cachedVoices.length ? cachedVoices : await loadVoices();
   return pickUsEnglishVoice(voices);
 }
 
-export async function speak(text, { rate = 1, pitch = 1, onEnd } = {}) {
+export interface SpeakOptions {
+  rate?: number;
+  pitch?: number;
+  onEnd?: () => void;
+}
+
+export async function speak(text: string, { rate = 1, pitch = 1, onEnd }: SpeakOptions = {}) {
   if (!text) return;
   window.speechSynthesis.cancel();
   const voice = await getUsVoice();
@@ -51,7 +58,15 @@ export async function speak(text, { rate = 1, pitch = 1, onEnd } = {}) {
   return utter;
 }
 
-export async function speakConversation(turns, { onEnd } = {}) {
+export interface ConversationTurn {
+  speaker: string;
+  line: string;
+}
+
+export async function speakConversation(
+  turns: ConversationTurn[],
+  { onEnd, rate = 1, announceSpeaker = true }: { onEnd?: () => void; rate?: number; announceSpeaker?: boolean } = {}
+): Promise<void> {
   window.speechSynthesis.cancel();
   const voice = await getUsVoice();
   return new Promise((resolve) => {
@@ -64,9 +79,10 @@ export async function speakConversation(turns, { onEnd } = {}) {
       }
       const turn = turns[i];
       i += 1;
-      const utter = new SpeechSynthesisUtterance(`${turn.speaker}: ${turn.line}`);
+      const text = announceSpeaker ? `${turn.speaker}: ${turn.line}` : turn.line;
+      const utter = new SpeechSynthesisUtterance(text);
       utter.lang = "en-US";
-      utter.rate = 1;
+      utter.rate = rate;
       // Alternate pitch slightly so the two speakers sound distinct.
       utter.pitch = i % 2 === 1 ? 1.15 : 0.85;
       if (voice) utter.voice = voice;
