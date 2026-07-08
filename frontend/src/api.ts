@@ -70,9 +70,12 @@ async function postForm<T>(path: string, formData: FormData): Promise<T> {
 
 const profileQS = (profileId?: number) => (profileId ? `?profile_id=${profileId}` : "");
 
-/** URL for an <audio> element to fetch neural TTS directly (GET, browser-cacheable). */
-function ttsUrl(text: string, accent: string): string {
+/** URL for an <audio> element to fetch neural TTS directly (GET, browser-cacheable).
+ *  Pass an explicit `voice` to override the accent's default (e.g. to give each
+ *  speaker in a conversation a distinct voice). */
+function ttsUrl(text: string, accent: string, voice?: string): string {
   const params = new URLSearchParams({ text, accent });
+  if (voice) params.set("voice", voice);
   return `${BASE_URL}/api/shadowing/tts?${params.toString()}`;
 }
 

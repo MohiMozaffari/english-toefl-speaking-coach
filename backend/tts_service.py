@@ -32,6 +32,10 @@ VOICES_BY_ACCENT: dict[str, list[str]] = {
     "en-AU": ["en-AU-NatashaNeural", "en-AU-WilliamNeural"],
 }
 
+# Flat set of every known voice, for validating an explicitly-requested voice
+# (e.g. Listening assigns each speaker in a conversation a distinct voice).
+ALL_VOICES = {voice for voices in VOICES_BY_ACCENT.values() for voice in voices}
+
 DEFAULT_ACCENT = "en-US"
 
 

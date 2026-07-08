@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { api } from "../api";
 import { useProfile } from "../contexts";
+import { useNeuralPlayer } from "../hooks/useNeuralPlayer";
 import { useRecorder } from "../hooks/useRecorder";
-import { speak, stopSpeaking } from "../speech";
 import { DiffText, LoadingCard, MetricChips, PageHeader } from "../components/ui";
 import type {
   ContrastStats,
@@ -26,7 +26,7 @@ export default function PronunciationLab() {
   useEffect(() => {
     api.getPronunciationContent().then(setContent).catch((err) => setError(err.message));
     refreshStats();
-    return () => stopSpeaking();
+    // Each tab plays audio through its own useNeuralPlayer, which stops on unmount.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [profile?.id]);
 
@@ -70,10 +70,11 @@ export default function PronunciationLab() {
 
 function SoundsTab({ vowels, consonants }: { vowels: IpaSound[]; consonants: IpaSound[] }) {
   const [selected, setSelected] = useState<IpaSound | null>(null);
+  const player = useNeuralPlayer();
 
   const hear = (sound: IpaSound) => {
     setSelected(sound);
-    speak(`${sound.examples[0]}. ${sound.examples[1]}. ${sound.examples[2]}.`, { rate: 0.85 });
+    player.play(`${sound.examples[0]}. ${sound.examples[1]}. ${sound.examples[2]}.`, 0.85);
   };
 
   const Chart = ({ title, sounds }: { title: string; sounds: IpaSound[] }) => (
@@ -146,6 +147,7 @@ function PairsTab({
   const [error, setError] = useState<string | null>(null);
   const [drillCount, setDrillCount] = useState(0);
   const recorder = useRecorder();
+  const player = useNeuralPlayer();
 
   const statFor = (set: MinimalPairSet) =>
     stats.find((s) => s.contrast === `${set.contrast} (${set.label})`);
@@ -249,11 +251,11 @@ function PairsTab({
         <p className="muted small" style={{ marginTop: 0 }}>Say this word clearly:</p>
         <p style={{ fontSize: "2.3rem", fontWeight: 800, margin: "4px 0 10px" }}>{target}</p>
         <div className="row" style={{ justifyContent: "center" }}>
-          <button type="button" className="small" onClick={() => speak(target!, { rate: 0.8 })}>
+          <button type="button" className="small" onClick={() => player.play(target!, 0.8)}>
             🔊 Hear it first
           </button>
           {recorder.status !== "recording" ? (
-            <button type="button" className="primary" onClick={() => { stopSpeaking(); setVerdict(null); recorder.start(); }} disabled={busy}>
+            <button type="button" className="primary" onClick={() => { player.stop(); setVerdict(null); recorder.start(); }} disabled={busy}>
               🎙️ Record
             </button>
           ) : (
@@ -303,6 +305,7 @@ function LessonsTab({ lessons, profileId }: { lessons: Lesson[]; profileId?: num
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const recorder = useRecorder();
+  const player = useNeuralPlayer();
 
   const line = useMemo(() => lesson?.practice_lines[lineIndex], [lesson, lineIndex]);
 
@@ -370,9 +373,9 @@ function LessonsTab({ lessons, profileId }: { lessons: Lesson[]; profileId?: num
         <p className="muted small" style={{ marginTop: 0 }}>🎯 {line?.note}</p>
 
         <div className="row">
-          <button type="button" onClick={() => speak(line!.text, { rate: 0.9 })}>▶ Hear it</button>
+          <button type="button" onClick={() => player.play(line!.text, 0.9)}>▶ Hear it</button>
           {recorder.status !== "recording" ? (
-            <button type="button" className="primary" onClick={() => { stopSpeaking(); setResult(null); recorder.start(); }} disabled={busy}>
+            <button type="button" className="primary" onClick={() => { player.stop(); setResult(null); recorder.start(); }} disabled={busy}>
               🎙️ Record
             </button>
           ) : (

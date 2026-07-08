@@ -139,10 +139,12 @@ def shadowing_accents():
 
 
 @app.get("/api/shadowing/tts")
-async def shadowing_tts(text: str, accent: str = tts_service.DEFAULT_ACCENT):
+async def shadowing_tts(text: str, accent: str = tts_service.DEFAULT_ACCENT, voice: str | None = None):
     if accent not in tts_service.VOICES_BY_ACCENT:
         raise AppError(f"Unknown accent: {accent}", code="bad_accent")
-    result = await tts_service.synthesize(text, accent)
+    if voice and voice not in tts_service.ALL_VOICES:
+        raise AppError(f"Unknown voice: {voice}", code="bad_voice")
+    result = await tts_service.synthesize(text, accent, voice=voice)
     return FileResponse(
         result["audio_path"],
         media_type="audio/mpeg",

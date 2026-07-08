@@ -1,11 +1,28 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { api } from "../api";
 import { useProfile } from "../contexts";
-import { speak, speakConversation, stopSpeaking } from "../speech";
+import { playNeural, playNeuralSequence, stopSpeaking } from "../speech";
 import { LoadingCard, PageHeader } from "../components/ui";
 import type { ListeningItem, ListeningItemSummary, QuizResult } from "../types";
 
 const RATES = [0.75, 1, 1.25];
+
+// American-English neural voices, alternating male/female so distinct speakers in
+// a conversation are easy to tell apart. Single-speaker items (lectures, talks,
+// announcements) simply use the first one throughout.
+const SPEAKER_VOICES = ["en-US-GuyNeural", "en-US-AriaNeural", "en-US-ChristopherNeural", "en-US-JennyNeural"];
+
+function voicesBySpeaker(segments: { speaker: string }[]): Record<string, string> {
+  const map: Record<string, string> = {};
+  let n = 0;
+  for (const seg of segments) {
+    if (!(seg.speaker in map)) {
+      map[seg.speaker] = SPEAKER_VOICES[n % SPEAKER_VOICES.length];
+      n += 1;
+    }
+  }
+  return map;
+}
 const DIFF_BADGE: Record<string, string> = { beginner: "good", intermediate: "warn", advanced: "bad" };
 const TYPE_LABEL: Record<string, string> = {
   conversation: "💬 Conversation",
@@ -27,10 +44,22 @@ export default function Listening() {
   const [answers, setAnswers] = useState<(number | null)[]>([]);
   const [result, setResult] = useState<QuizResult | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const playbackRef = useRef<{ stop: () => void } | null>(null);
+
+  const stopPlayback = () => {
+    playbackRef.current?.stop();
+    playbackRef.current = null;
+    stopSpeaking();
+    setPlayingAll(false);
+    setPlayingIdx(null);
+  };
 
   useEffect(() => {
     api.getListeningItems().then(setItems).catch((err) => setError(err.message));
-    return () => stopSpeaking();
+    return () => {
+      playbackRef.current?.stop();
+      stopSpeaking();
+    };
   }, []);
 
   const open = async (id: string) => {
@@ -45,22 +74,35 @@ export default function Listening() {
     }
   };
 
-  const playAll = async () => {
+  // Plays the whole item in realistic neural voices (edge-tts), giving each
+  // speaker a distinct voice, and falls back to the browser voice if that's
+  // unreachable. Highlights each line as it's spoken.
+  const playAll = () => {
     if (!item) return;
-    stopSpeaking();
+    stopPlayback();
     setPlayingAll(true);
-    await speakConversation(
-      item.segments.map((s) => ({ speaker: s.speaker, line: s.text })),
-      { rate, announceSpeaker: item.segments.some((s, i, all) => i > 0 && s.speaker !== all[i - 1].speaker) }
+    const voiceMap = voicesBySpeaker(item.segments);
+    playbackRef.current = playNeuralSequence(
+      item.segments.map((s) => ({ text: s.text, voice: voiceMap[s.speaker] })),
+      {
+        rate,
+        onSegment: (idx) => setPlayingIdx(idx),
+        onEnd: () => { setPlayingAll(false); setPlayingIdx(null); },
+      }
     );
-    setPlayingAll(false);
   };
 
-  const playSegment = async (i: number) => {
+  const playSegment = (i: number) => {
     if (!item) return;
-    stopSpeaking();
+    stopPlayback();
     setPlayingIdx(i);
-    await speak(item.segments[i].text, { rate, onEnd: () => setPlayingIdx(null) });
+    const voiceMap = voicesBySpeaker(item.segments);
+    playbackRef.current = playNeural(item.segments[i].text, {
+      accent: "en-US",
+      voice: voiceMap[item.segments[i].speaker],
+      rate,
+      onEnd: () => setPlayingIdx(null),
+    });
   };
 
   const submit = async () => {
@@ -121,7 +163,7 @@ export default function Listening() {
       <PageHeader
         title={item.title}
         subtitle={`${TYPE_LABEL[item.type] ?? item.type} · ${item.difficulty}`}
-        actions={<button type="button" onClick={() => { stopSpeaking(); setItem(null); }}>← All items</button>}
+        actions={<button type="button" onClick={() => { stopPlayback(); setItem(null); }}>← All items</button>}
       />
 
       <div className="card">
@@ -222,7 +264,7 @@ export default function Listening() {
               <button type="button" onClick={() => { setResult(null); setAnswers(new Array(item.questions.length).fill(null)); }}>
                 🔁 Try again
               </button>
-              <button type="button" className="primary" onClick={() => { stopSpeaking(); setItem(null); }}>
+              <button type="button" className="primary" onClick={() => { stopPlayback(); setItem(null); }}>
                 Next item →
               </button>
             </div>

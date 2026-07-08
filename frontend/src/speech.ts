@@ -105,10 +105,10 @@ export function stopSpeaking() {
 // Returns a handle whose stop() halts whichever voice is currently playing.
 export function playNeural(
   text: string,
-  { accent = "en-US", rate = 1, onEnd, onFallback }: { accent?: string; rate?: number; onEnd?: () => void; onFallback?: () => void } = {}
+  { accent = "en-US", voice, rate = 1, onEnd, onFallback }: { accent?: string; voice?: string; rate?: number; onEnd?: () => void; onFallback?: () => void } = {}
 ): { stop: () => void } {
   window.speechSynthesis.cancel();
-  const audio = new Audio(ttsUrl(text, accent));
+  const audio = new Audio(ttsUrl(text, accent, voice));
   audio.playbackRate = rate;
   let done = false;
 
@@ -131,6 +131,58 @@ export function playNeural(
       done = true;
       audio.pause();
       window.speechSynthesis.cancel();
+    },
+  };
+}
+
+export interface NeuralSegment {
+  text: string;
+  voice?: string;
+}
+
+// Plays a list of segments back-to-back with neural voices, each optionally in
+// its own voice (used to give different speakers in a conversation distinct
+// voices). Falls back to the browser voice per segment if the neural service is
+// unreachable. onSegment fires with the index as each segment starts, so the UI
+// can highlight the line being spoken. Returns a handle whose stop() halts
+// playback immediately.
+export function playNeuralSequence(
+  segments: NeuralSegment[],
+  {
+    accent = "en-US",
+    rate = 1,
+    onSegment,
+    onEnd,
+    onFallback,
+  }: { accent?: string; rate?: number; onSegment?: (index: number) => void; onEnd?: () => void; onFallback?: () => void } = {}
+): { stop: () => void } {
+  let cancelled = false;
+  let current: { stop: () => void } | null = null;
+  let i = 0;
+
+  const step = () => {
+    if (cancelled) return;
+    if (i >= segments.length) {
+      onEnd?.();
+      return;
+    }
+    const index = i;
+    i += 1;
+    onSegment?.(index);
+    current = playNeural(segments[index].text, {
+      accent,
+      voice: segments[index].voice,
+      rate,
+      onFallback,
+      onEnd: step,
+    });
+  };
+  step();
+
+  return {
+    stop: () => {
+      cancelled = true;
+      current?.stop();
     },
   };
 }
