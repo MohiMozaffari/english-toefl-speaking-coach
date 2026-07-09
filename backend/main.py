@@ -60,8 +60,13 @@ def get_settings():
 
 @app.post("/api/settings")
 def update_settings(payload: dict):
-    allowed = {"base_url", "api_key", "model", "whisper_model"}
+    allowed = {"base_url", "api_key", "model", "whisper_model", "daily_goal_xp"}
     update = {k: v for k, v in payload.items() if k in allowed}
+    if "daily_goal_xp" in update:
+        try:
+            update["daily_goal_xp"] = max(10, min(500, int(update["daily_goal_xp"])))
+        except (TypeError, ValueError):
+            del update["daily_goal_xp"]
     return save_config(update)
 
 
@@ -79,32 +84,6 @@ def health():
             else f"faster-whisper is not installed. Run: {whisper_service.PIP_INSTALL_HINT}",
         },
     }
-
-
-# --- Profiles -----------------------------------------------------------------
-
-
-@app.get("/api/profiles")
-def profiles():
-    return db.list_profiles()
-
-
-@app.post("/api/profiles")
-def create_profile(payload: dict):
-    name = (payload.get("name") or "").strip()
-    if not name:
-        raise AppError("Profile name is required.", code="bad_profile_name")
-    profile_id = db.create_profile(name, int(payload.get("daily_goal_xp") or 50))
-    return db.get_profile(profile_id)
-
-
-@app.post("/api/profiles/{profile_id}")
-def update_profile(profile_id: int, payload: dict):
-    if not db.get_profile(profile_id):
-        raise AppError("Profile not found.", code="not_found", status_code=404)
-    goal = payload.get("daily_goal_xp")
-    db.update_profile(profile_id, name=payload.get("name"), daily_goal_xp=int(goal) if goal else None)
-    return db.get_profile(profile_id)
 
 
 # --- Content -------------------------------------------------------------

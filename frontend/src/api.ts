@@ -9,7 +9,6 @@ import type {
   PairVerdict,
   Passage,
   PassageSummary,
-  Profile,
   PronunciationContent,
   QuizResult,
   Recommendation,
@@ -68,8 +67,6 @@ async function postForm<T>(path: string, formData: FormData): Promise<T> {
   return handleResponse<T>(res);
 }
 
-const profileQS = (profileId?: number) => (profileId ? `?profile_id=${profileId}` : "");
-
 /** URL for an <audio> element to fetch neural TTS directly (GET, browser-cacheable).
  *  Pass an explicit `voice` to override the accent's default (e.g. to give each
  *  speaker in a conversation a distinct voice). */
@@ -84,12 +81,6 @@ export const api = {
   getSettings: () => get<Settings>("/api/settings"),
   saveSettings: (settings: Partial<Settings>) => postJson<Settings>("/api/settings", settings),
   getHealth: () => get<HealthStatus>("/api/health"),
-
-  // Profiles
-  getProfiles: () => get<Profile[]>("/api/profiles"),
-  createProfile: (name: string) => postJson<Profile>("/api/profiles", { name }),
-  updateProfile: (id: number, data: { name?: string; daily_goal_xp?: number }) =>
-    postJson<Profile>(`/api/profiles/${id}`, data),
 
   // Content
   getGeneralTopics: () => get<GeneralTopic[]>("/api/topics/general"),
@@ -108,25 +99,16 @@ export const api = {
   submitShadowingAttempt: (formData: FormData) => postForm<ShadowingResult>("/api/shadowing/attempt", formData),
   submitPairAttempt: (formData: FormData) => postForm<PairVerdict>("/api/pronunciation/pair-attempt", formData),
   submitLineAttempt: (formData: FormData) => postForm<ShadowingResult>("/api/pronunciation/line-attempt", formData),
-  submitListeningQuiz: (itemId: string, answers: (number | null)[], profileId?: number) =>
-    postJson<QuizResult>("/api/listening/submit", { item_id: itemId, answers, profile_id: profileId }),
+  submitListeningQuiz: (itemId: string, answers: (number | null)[]) =>
+    postJson<QuizResult>("/api/listening/submit", { item_id: itemId, answers }),
 
   // Progress & analytics
-  getShadowingProgress: (profileId?: number) =>
-    get<ShadowingProgressRow[]>(`/api/shadowing/progress${profileQS(profileId)}`),
-  getPronunciationStats: (profileId?: number) =>
-    get<ContrastStats[]>(`/api/pronunciation/stats${profileQS(profileId)}`),
-  getSessions: (mode?: string, profileId?: number) => {
-    const params = new URLSearchParams();
-    if (mode) params.set("mode", mode);
-    if (profileId) params.set("profile_id", String(profileId));
-    const qs = params.toString();
-    return get<SessionSummary[]>(`/api/sessions${qs ? `?${qs}` : ""}`);
-  },
+  getShadowingProgress: () => get<ShadowingProgressRow[]>("/api/shadowing/progress"),
+  getPronunciationStats: () => get<ContrastStats[]>("/api/pronunciation/stats"),
+  getSessions: (mode?: string) => get<SessionSummary[]>(`/api/sessions${mode ? `?mode=${mode}` : ""}`),
   getSession: (id: string | number) => get<SessionDetailData>(`/api/sessions/${id}`),
-  getDashboard: (profileId?: number) => get<DashboardData>(`/api/stats/dashboard${profileQS(profileId)}`),
-  getRecommendations: (profileId?: number) =>
-    get<Recommendation[]>(`/api/coach/recommendations${profileQS(profileId)}`),
+  getDashboard: () => get<DashboardData>("/api/stats/dashboard"),
+  getRecommendations: () => get<Recommendation[]>("/api/coach/recommendations"),
 };
 
 export { BASE_URL, ttsUrl };

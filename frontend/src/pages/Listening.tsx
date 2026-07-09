@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from "react";
 import { api } from "../api";
-import { useProfile } from "../contexts";
 import { playNeural, playNeuralSequence, stopSpeaking } from "../speech";
 import { LoadingCard, PageHeader } from "../components/ui";
 import type { ListeningItem, ListeningItemSummary, QuizResult } from "../types";
@@ -33,7 +32,6 @@ const TYPE_LABEL: Record<string, string> = {
 };
 
 export default function Listening() {
-  const { profile } = useProfile();
   const [items, setItems] = useState<ListeningItemSummary[]>([]);
   const [filter, setFilter] = useState("all");
   const [item, setItem] = useState<ListeningItem | null>(null);
@@ -109,7 +107,7 @@ export default function Listening() {
     if (!item) return;
     setError(null);
     try {
-      const res = await api.submitListeningQuiz(item.id, answers, profile?.id);
+      const res = await api.submitListeningQuiz(item.id, answers);
       setResult(res);
     } catch (err) {
       setError((err as Error).message);

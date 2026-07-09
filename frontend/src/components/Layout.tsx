@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { NavLink, Outlet, useLocation } from "react-router-dom";
-import { useProfile, useTheme } from "../contexts";
+import { useTheme } from "../contexts";
 
 const NAV = [
   { section: "Overview", items: [{ to: "/", icon: "📊", label: "Dashboard" }] },
@@ -31,22 +31,12 @@ const NAV = [
 export default function Layout() {
   const [open, setOpen] = useState(false);
   const { theme, toggleTheme } = useTheme();
-  const { profiles, profile, setActiveProfile, createProfile } = useProfile();
   const location = useLocation();
 
   // Close the mobile drawer on navigation.
   useEffect(() => {
     setOpen(false);
   }, [location.pathname]);
-
-  const handleProfileChange = async (value: string) => {
-    if (value === "__new__") {
-      const name = window.prompt("Name for the new profile:");
-      if (name && name.trim()) await createProfile(name.trim());
-      return;
-    }
-    setActiveProfile(Number(value));
-  };
 
   return (
     <div className="shell">
@@ -73,20 +63,6 @@ export default function Layout() {
           </div>
         ))}
         <div className="sidebar-footer">
-          {profiles.length > 0 && (
-            <select
-              aria-label="Active profile"
-              value={profile?.id ?? ""}
-              onChange={(e) => handleProfileChange(e.target.value)}
-            >
-              {profiles.map((p) => (
-                <option key={p.id} value={p.id}>
-                  👤 {p.name}
-                </option>
-              ))}
-              <option value="__new__">➕ New profile…</option>
-            </select>
-          )}
           <button type="button" onClick={toggleTheme} aria-label="Toggle color theme">
             {theme === "dark" ? "☀️ Light mode" : "🌙 Dark mode"}
           </button>

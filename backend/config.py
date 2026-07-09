@@ -13,6 +13,9 @@ DEFAULT_CONFIG = {
     "api_key": "",
     "model": "auto",
     "whisper_model": "small",
+    # Single-user preference (the daily XP goal shown on the dashboard). Lives here
+    # rather than on a profile row now that the app is single-user.
+    "daily_goal_xp": 50,
 }
 
 _lock = threading.RLock()

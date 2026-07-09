@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { api } from "../api";
-import { useProfile } from "../contexts";
 import { useRecorder } from "../hooks/useRecorder";
 import { speak } from "../speech";
 import { MetricChips, PageHeader, ReplayButton } from "../components/ui";
@@ -15,7 +14,6 @@ function formatTime(totalSeconds: number) {
 type Phase = "select" | "ready" | "recording" | "processing" | "result";
 
 export default function GeneralPractice() {
-  const { profile } = useProfile();
   const [topics, setTopics] = useState<GeneralTopic[]>([]);
   const [topicsError, setTopicsError] = useState<string | null>(null);
   const [selected, setSelected] = useState<GeneralTopic | null>(null);
@@ -57,7 +55,6 @@ export default function GeneralPractice() {
       formData.append("audio", blob, "answer.webm");
       formData.append("topic_id", selected.id);
       formData.append("topic_prompt", selected.prompt);
-      if (profile?.id) formData.append("profile_id", String(profile.id));
       const data = await api.submitGeneralAttempt(formData);
       setResult(data);
       setPhase("result");

@@ -294,4 +294,5 @@ export interface Settings {
   api_key: string;
   model: string;
   whisper_model: string;
+  daily_goal_xp: number;
 }

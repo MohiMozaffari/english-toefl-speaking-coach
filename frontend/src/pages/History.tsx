@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { api } from "../api";
-import { useProfile } from "../contexts";
 import { EmptyState, PageHeader, ScoreBadge } from "../components/ui";
 import type { SessionSummary } from "../types";
 
@@ -11,7 +10,6 @@ const TASK_LABEL: Record<string, string> = {
 };
 
 export default function History() {
-  const { profile } = useProfile();
   const [filter, setFilter] = useState("all");
   const [sessions, setSessions] = useState<SessionSummary[]>([]);
   const [error, setError] = useState<string | null>(null);
@@ -20,10 +18,10 @@ export default function History() {
   useEffect(() => {
     const mode = filter === "all" ? undefined : filter;
     api
-      .getSessions(mode, profile?.id)
+      .getSessions(mode)
       .then(setSessions)
       .catch((err) => setError(err.message));
-  }, [filter, profile?.id]);
+  }, [filter]);
 
   return (
     <div>

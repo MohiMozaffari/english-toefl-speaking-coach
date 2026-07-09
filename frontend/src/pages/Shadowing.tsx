@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { api, ttsUrl } from "../api";
-import { useProfile } from "../contexts";
 import { useRecorder } from "../hooks/useRecorder";
 import { speak, stopSpeaking } from "../speech";
 import { DiffText, LoadingCard, MetricChips, PageHeader } from "../components/ui";
@@ -16,7 +15,6 @@ const ACCENTS: { value: Accent; label: string }[] = [
 const DIFF_BADGE: Record<string, string> = { beginner: "good", intermediate: "warn", academic: "bad" };
 
 export default function Shadowing() {
-  const { profile } = useProfile();
   const [passages, setPassages] = useState<PassageSummary[]>([]);
   const [progress, setProgress] = useState<ShadowingProgressRow[]>([]);
   const [filter, setFilter] = useState<string>("all");
@@ -43,10 +41,10 @@ export default function Shadowing() {
       audioRef.current?.pause();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [profile?.id]);
+  }, []);
 
   const refreshProgress = () => {
-    api.getShadowingProgress(profile?.id).then(setProgress).catch(() => {});
+    api.getShadowingProgress().then(setProgress).catch(() => {});
   };
 
   const progressFor = (passageId: string) => {
@@ -140,7 +138,6 @@ export default function Shadowing() {
       formData.append("audio", blob, "shadow.webm");
       formData.append("passage_id", passage.id);
       formData.append("sentence_index", String(index));
-      if (profile?.id) formData.append("profile_id", String(profile.id));
       const res = await api.submitShadowingAttempt(formData);
       setResult(res);
       refreshProgress();

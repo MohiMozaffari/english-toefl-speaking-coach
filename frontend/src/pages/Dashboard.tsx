@@ -17,7 +17,6 @@ import {
   YAxis,
 } from "recharts";
 import { api } from "../api";
-import { useProfile } from "../contexts";
 import { EmptyState, LoadingCard, PageHeader, ProgressRing, Stat } from "../components/ui";
 import type { DashboardData } from "../types";
 
@@ -30,17 +29,16 @@ const chartTooltipStyle = {
 };
 
 export default function Dashboard() {
-  const { profile } = useProfile();
   const [data, setData] = useState<DashboardData | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     setData(null);
     api
-      .getDashboard(profile?.id)
+      .getDashboard()
       .then(setData)
       .catch((err) => setError(err.message));
-  }, [profile?.id]);
+  }, []);
 
   if (error) {
     return (

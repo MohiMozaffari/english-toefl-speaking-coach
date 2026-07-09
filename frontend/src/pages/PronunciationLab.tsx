@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
 import { api } from "../api";
-import { useProfile } from "../contexts";
 import { useNeuralPlayer } from "../hooks/useNeuralPlayer";
 import { useRecorder } from "../hooks/useRecorder";
 import { DiffText, LoadingCard, MetricChips, PageHeader } from "../components/ui";
@@ -21,17 +20,16 @@ export default function PronunciationLab() {
   const [stats, setStats] = useState<ContrastStats[]>([]);
   const [tab, setTab] = useState<Tab>("sounds");
   const [error, setError] = useState<string | null>(null);
-  const { profile } = useProfile();
 
   useEffect(() => {
     api.getPronunciationContent().then(setContent).catch((err) => setError(err.message));
     refreshStats();
     // Each tab plays audio through its own useNeuralPlayer, which stops on unmount.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [profile?.id]);
+  }, []);
 
   const refreshStats = () => {
-    api.getPronunciationStats(profile?.id).then(setStats).catch(() => {});
+    api.getPronunciationStats().then(setStats).catch(() => {});
   };
 
   if (error) return <div className="error-box">{error}</div>;
@@ -58,10 +56,8 @@ export default function PronunciationLab() {
       </div>
 
       {tab === "sounds" && <SoundsTab vowels={content.vowels} consonants={content.consonants} />}
-      {tab === "pairs" && (
-        <PairsTab sets={content.minimal_pairs} stats={stats} onAttempt={refreshStats} profileId={profile?.id} />
-      )}
-      {tab === "lessons" && <LessonsTab lessons={content.lessons} profileId={profile?.id} />}
+      {tab === "pairs" && <PairsTab sets={content.minimal_pairs} stats={stats} onAttempt={refreshStats} />}
+      {tab === "lessons" && <LessonsTab lessons={content.lessons} />}
     </div>
   );
 }
@@ -133,12 +129,10 @@ function PairsTab({
   sets,
   stats,
   onAttempt,
-  profileId,
 }: {
   sets: MinimalPairSet[];
   stats: ContrastStats[];
   onAttempt: () => void;
-  profileId?: number;
 }) {
   const [activeSet, setActiveSet] = useState<MinimalPairSet | null>(null);
   const [target, setTarget] = useState<string | null>(null);
@@ -177,7 +171,6 @@ function PairsTab({
       formData.append("audio", blob, "pair.webm");
       formData.append("pair_set_id", activeSet.id);
       formData.append("target_word", target);
-      if (profileId) formData.append("profile_id", String(profileId));
       const res = await api.submitPairAttempt(formData);
       setVerdict(res);
       setDrillCount((c) => c + 1);
@@ -298,7 +291,7 @@ function PairsTab({
 
 // --- Technique lessons -------------------------------------------------------------
 
-function LessonsTab({ lessons, profileId }: { lessons: Lesson[]; profileId?: number }) {
+function LessonsTab({ lessons }: { lessons: Lesson[] }) {
   const [lesson, setLesson] = useState<Lesson | null>(null);
   const [lineIndex, setLineIndex] = useState(0);
   const [result, setResult] = useState<ShadowingResult | null>(null);
@@ -326,7 +319,6 @@ function LessonsTab({ lessons, profileId }: { lessons: Lesson[]; profileId?: num
       formData.append("audio", blob, "line.webm");
       formData.append("lesson_id", lesson.id);
       formData.append("line_index", String(lineIndex));
-      if (profileId) formData.append("profile_id", String(profileId));
       const res = await api.submitLineAttempt(formData);
       setResult(res);
     } catch (err) {

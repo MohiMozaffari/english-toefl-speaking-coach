@@ -7,6 +7,7 @@ deliberately transparent — every axis documents its formula. Axes are 0-100.
 from __future__ import annotations
 
 import coach
+import config
 import db
 import gamification
 
@@ -133,7 +134,7 @@ def dashboard(profile_id: int) -> dict:
     return {
         "profile": profile,
         "xp": {"total": total_xp, **gamification.level_from_xp(total_xp), "today": today,
-               "daily_goal": profile.get("daily_goal_xp", 50)},
+               "daily_goal": config.load_config().get("daily_goal_xp", 50)},
         "streak": streak,
         "totals": {
             "sessions": len(sessions),

@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { api } from "../api";
-import { useProfile } from "../contexts";
 import { PageHeader } from "../components/ui";
 import type { HealthStatus, Settings as SettingsData } from "../types";
 
@@ -11,9 +10,13 @@ const WHISPER_OPTIONS = [
 ];
 
 export default function Settings() {
-  const { profile, refreshProfiles } = useProfile();
-  const [form, setForm] = useState<SettingsData>({ base_url: "", api_key: "", model: "", whisper_model: "small" });
-  const [goal, setGoal] = useState<number>(50);
+  const [form, setForm] = useState<SettingsData>({
+    base_url: "",
+    api_key: "",
+    model: "",
+    whisper_model: "small",
+    daily_goal_xp: 50,
+  });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -28,10 +31,6 @@ export default function Settings() {
       .finally(() => setLoading(false));
     refreshHealth();
   }, []);
-
-  useEffect(() => {
-    if (profile) setGoal(profile.daily_goal_xp);
-  }, [profile]);
 
   const refreshHealth = () => {
     api.getHealth().then(setHealth).catch(() => setHealth(null));
@@ -48,10 +47,6 @@ export default function Settings() {
     try {
       const result = await api.saveSettings(form);
       setForm(result);
-      if (profile && goal !== profile.daily_goal_xp) {
-        await api.updateProfile(profile.id, { daily_goal_xp: goal });
-        await refreshProfiles();
-      }
       setSaved(true);
       refreshHealth();
       setTimeout(() => setSaved(false), 2500);
@@ -96,23 +91,19 @@ export default function Settings() {
             ))}
           </select>
 
-          {profile && (
-            <>
-              <label htmlFor="daily_goal">Daily XP goal ({profile.name})</label>
-              <input
-                id="daily_goal"
-                type="number"
-                min={10}
-                max={500}
-                step={10}
-                value={goal}
-                onChange={(e) => setGoal(Number(e.target.value))}
-              />
-              <p className="muted small" style={{ marginTop: 4 }}>
-                Rough guide: one TOEFL set ≈ 40-70 XP, a shadowing sentence ≈ 3 XP, a listening quiz ≈ 10-18 XP.
-              </p>
-            </>
-          )}
+          <label htmlFor="daily_goal">Daily XP goal</label>
+          <input
+            id="daily_goal"
+            type="number"
+            min={10}
+            max={500}
+            step={10}
+            value={form.daily_goal_xp}
+            onChange={(e) => setForm((f) => ({ ...f, daily_goal_xp: Number(e.target.value) }))}
+          />
+          <p className="muted small" style={{ marginTop: 4 }}>
+            Rough guide: one TOEFL set ≈ 40-70 XP, a shadowing sentence ≈ 3 XP, a listening quiz ≈ 10-18 XP.
+          </p>
 
           <div className="row" style={{ marginTop: 20 }}>
             <button type="submit" className="primary" disabled={saving}>

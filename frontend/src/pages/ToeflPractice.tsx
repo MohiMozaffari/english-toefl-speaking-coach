@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from "react";
 import { api } from "../api";
-import { useProfile } from "../contexts";
 import { useCountdown } from "../hooks/useCountdown";
 import { useRecorder } from "../hooks/useRecorder";
 import { playNeural, speak, stopSpeaking } from "../speech";
@@ -23,7 +22,6 @@ type Stage = "select_task" | "select_prompt" | "running" | "processing" | "resul
 type TaskType = "listen_repeat" | "interview";
 
 export default function ToeflPractice() {
-  const { profile } = useProfile();
   const [tasksData, setTasksData] = useState<ToeflTopics | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
 
@@ -119,7 +117,6 @@ export default function ToeflPractice() {
       blobs.forEach((b, i) => formData.append("audio", b, `item_${i}.webm`));
       formData.append("task_type", taskType);
       formData.append("prompt_id", set.id);
-      if (profile?.id) formData.append("profile_id", String(profile.id));
       const data = await api.submitToeflAttempt(formData);
       setResult(data);
       setStage("result");
