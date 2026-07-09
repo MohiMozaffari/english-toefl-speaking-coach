@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import type { ReactNode } from "react";
 import { api } from "../api";
 import { useCountdown } from "../hooks/useCountdown";
 import { useRecorder } from "../hooks/useRecorder";
@@ -18,6 +19,16 @@ const TASK_DESCRIPTIONS: Record<string, string> = {
     "You'll be asked 4 questions in a row about one familiar topic, like a simulated interview. No prep time — 45 seconds to answer each question.",
 };
 
+// A single strategy hint per task, shown in Practice mode only. Phase 5 replaces
+// this with richer, per-item tips stored as data.
+const PRACTICE_TIPS: Record<string, string> = {
+  listen_repeat:
+    "Listen to the whole sentence before you speak, then match its rhythm and stress — a full sentence said smoothly scores better than every word said choppily.",
+  interview:
+    "Answer the actual question in your first sentence, then add one reason and one concrete example. A clear, developed 3-4 sentence answer beats a long, rambling one.",
+};
+
+type Mode = "practice" | "exam";
 type Stage = "select_task" | "select_prompt" | "running" | "processing" | "result" | "error";
 type TaskType = "listen_repeat" | "interview";
 
@@ -25,6 +36,7 @@ export default function ToeflPractice() {
   const [tasksData, setTasksData] = useState<ToeflTopics | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
 
+  const [mode, setMode] = useState<Mode>("practice");
   const [taskType, setTaskType] = useState<TaskType | null>(null);
   const [promptSet, setPromptSet] = useState<ToeflSet | null>(null);
   const [stage, setStage] = useState<Stage>("select_task");
@@ -58,6 +70,16 @@ export default function ToeflPractice() {
     setStage("select_prompt");
   };
 
+  const selectSet = (set: ToeflSet) => {
+    if (mode === "exam") runExamSet(set);
+    else startPracticeItem(set, 0);
+  };
+
+  const totalOf = (set: ToeflSet) => ("sentences" in set ? set.sentences : set.questions).length;
+  const textsOf = (set: ToeflSet) => ("sentences" in set ? set.sentences : set.questions);
+
+  // --- Exam mode: whole set, enforced timers, continuous, one report ----------
+
   const recordItem = (durationSec: number): Promise<Blob | null> =>
     new Promise((resolve) => {
       const finish = async () => {
@@ -66,16 +88,16 @@ export default function ToeflPractice() {
         resolve(blob);
       };
       stopEarlyRef.current = finish;
-      countdown.start(durationSec, finish);
+      countdown.start(durationSec, finish); // enforced: auto-stops at 0
     });
 
-  const runSet = async (set: ToeflSet) => {
+  const runExamSet = async (set: ToeflSet) => {
     if (!tasksData || !taskType) return;
     const runId = ++runIdRef.current;
     setPromptSet(set);
     setResult(null);
     setSubmitError(null);
-    const texts = "sentences" in set ? set.sentences : set.questions;
+    const texts = textsOf(set);
     const durations = tasksData.timing[taskType].item_seconds;
     const blobs: Blob[] = [];
 
@@ -84,9 +106,6 @@ export default function ToeflPractice() {
       if (runIdRef.current !== runId) return; // superseded by a newer run
       setItemIndex(i);
       setPhase("listening");
-      // Play the exam prompt in the same realistic neural voice as Shadowing
-      // (edge-tts), falling back to the browser voice if it's unreachable.
-      // Real TOEFL iBT is American English.
       await new Promise<void>((resolve) => {
         playbackRef.current = playNeural(texts[i], { accent: "en-US", onEnd: resolve });
       });
@@ -100,13 +119,8 @@ export default function ToeflPractice() {
         return;
       }
       const blob = await recordItem(durations[i]);
-      // Always push one entry per item, even if the recorder produced nothing
-      // (e.g. it was already inactive at timer-expiry). An empty Blob still
-      // counts toward the set size the backend expects; the alternative --
-      // silently dropping the item -- shrinks the array by one and makes the
-      // *entire* submission get rejected for a count mismatch, losing every
-      // other item's real audio along with it. The backend classifies an empty
-      // item as "too short" for just that one item instead.
+      // Always push one entry per item so a dropped recording can't shrink the
+      // array and get the whole submission rejected for a count mismatch.
       blobs.push(blob && blob.size > 0 ? blob : new Blob([], { type: "audio/webm" }));
     }
 
@@ -126,6 +140,59 @@ export default function ToeflPractice() {
       setStage("error");
     }
   };
+
+  // --- Practice mode: one item at a time, timer shown but not enforced --------
+
+  const startPracticeItem = async (set: ToeflSet, index: number) => {
+    if (!tasksData || !taskType) return;
+    const runId = ++runIdRef.current;
+    setPromptSet(set);
+    setItemIndex(index);
+    setResult(null);
+    setSubmitError(null);
+    const texts = textsOf(set);
+    const durations = tasksData.timing[taskType].item_seconds;
+
+    setStage("running");
+    setPhase("listening");
+    await new Promise<void>((resolve) => {
+      playbackRef.current = playNeural(texts[index], { accent: "en-US", onEnd: resolve });
+    });
+
+    if (runIdRef.current !== runId) return;
+    setPhase("recording");
+    const ok = await recorder.start();
+    if (!ok) {
+      setSubmitError(recorder.error || "Could not access the microphone.");
+      setStage("error");
+      return;
+    }
+    // Not enforced: the countdown shows for realism but never cuts you off.
+    countdown.start(durations[index], undefined, false);
+  };
+
+  const submitPracticeItem = async () => {
+    if (!promptSet || !taskType) return;
+    countdown.stop();
+    const blob = await recorder.stop();
+    setStage("processing");
+    try {
+      const formData = new FormData();
+      formData.append("audio", blob && blob.size > 0 ? blob : new Blob([], { type: "audio/webm" }), "item.webm");
+      formData.append("task_type", taskType);
+      formData.append("prompt_id", promptSet.id);
+      formData.append("item_index", String(itemIndex));
+      const data = await api.submitToeflAttempt(formData);
+      setResult(data);
+      setStage("result");
+      speak(`${data.feedback.score_reason} ${data.feedback.focus_next}`);
+    } catch (err) {
+      setSubmitError((err as Error).message);
+      setStage("error");
+    }
+  };
+
+  // --- Navigation --------------------------------------------------------------
 
   const reset = () => {
     runIdRef.current += 1;
@@ -149,7 +216,23 @@ export default function ToeflPractice() {
   if (loadError) return <div className="error-box">Could not load TOEFL content: {loadError}</div>;
   if (!tasksData) return <p className="muted">Loading…</p>;
 
-  const totalItems = promptSet ? ("sentences" in promptSet ? promptSet.sentences : promptSet.questions).length : 0;
+  const total = promptSet ? totalOf(promptSet) : 0;
+
+  const modeToggle = (
+    <div className="row" role="group" aria-label="Practice or Exam mode">
+      <button type="button" className={mode === "practice" ? "primary small" : "small"} onClick={() => setMode("practice")}>
+        📝 Practice
+      </button>
+      <button type="button" className={mode === "exam" ? "primary small" : "small"} onClick={() => setMode("exam")}>
+        ⏱️ Exam
+      </button>
+    </div>
+  );
+
+  const modeHint =
+    mode === "practice"
+      ? "Practice: one item at a time, timer shown but never cuts you off, tips on, feedback after each item — redo freely."
+      : "Exam: the whole set runs continuously, the timer is enforced, no tips and no redos — one score report at the end.";
 
   return (
     <div>
@@ -157,6 +240,16 @@ export default function ToeflPractice() {
         title="TOEFL Speaking Practice"
         subtitle="The redesigned TOEFL iBT Speaking section (2026): Listen and Repeat + Take an Interview, no prep time, scored 1-6."
       />
+
+      {(stage === "select_task" || stage === "select_prompt") && (
+        <div className="card">
+          <div className="flex-between">
+            <p className="section-title" style={{ margin: 0 }}>Mode</p>
+            {modeToggle}
+          </div>
+          <p className="muted small" style={{ marginBottom: 0 }}>{modeHint}</p>
+        </div>
+      )}
 
       {stage === "select_task" && (
         <div className="grid cols-2">
@@ -177,7 +270,7 @@ export default function ToeflPractice() {
           </div>
           <div className="topic-list" style={{ marginTop: 14 }}>
             {tasksData.tasks[taskType].map((set) => (
-              <button key={set.id} type="button" className="topic-item" onClick={() => runSet(set)}>
+              <button key={set.id} type="button" className="topic-item" onClick={() => selectSet(set)}>
                 <div className="cat">
                   {"sentences" in set ? `${set.sentences.length} sentences` : `${set.questions.length} questions`}
                 </div>
@@ -190,19 +283,29 @@ export default function ToeflPractice() {
 
       {promptSet && stage === "running" && (
         <div className="card">
-          <p className="section-title">
-            {TASK_LABELS[taskType!]} — {promptSet.title}
-          </p>
-          <div className="row" aria-label="Progress">
-            {Array.from({ length: totalItems }).map((_, i) => (
-              <span
-                key={i}
-                className={`badge ${i < itemIndex ? "good" : i === itemIndex ? "info" : "neutral"}`}
-              >
+          <div className="flex-between">
+            <p className="section-title" style={{ margin: 0 }}>
+              {TASK_LABELS[taskType!]} — {promptSet.title}
+            </p>
+            <span className="badge neutral">{mode === "practice" ? "📝 Practice" : "⏱️ Exam"}</span>
+          </div>
+
+          <div className="row" aria-label="Progress" style={{ marginTop: 10 }}>
+            {Array.from({ length: total }).map((_, i) => (
+              <span key={i} className={`badge ${i < itemIndex ? "good" : i === itemIndex ? "info" : "neutral"}`}>
                 {i + 1}
               </span>
             ))}
+            <span className="muted small">
+              {taskType === "listen_repeat" ? "Sentence" : "Question"} {itemIndex + 1} of {total}
+            </span>
           </div>
+
+          {mode === "practice" && (
+            <div className="card sub" style={{ margin: "12px 0" }}>
+              💡 <strong>Tip:</strong> {PRACTICE_TIPS[taskType!]}
+            </div>
+          )}
 
           {"picture_caption" in promptSet && (
             <div className="transcript-box center" style={{ margin: "14px 0" }}>
@@ -226,9 +329,20 @@ export default function ToeflPractice() {
                 <span className="recording-dot" aria-hidden="true" />
                 {taskType === "listen_repeat" ? "Repeat the sentence now." : "Answer the question now."}
               </p>
-              <button type="button" className="danger" onClick={() => stopEarlyRef.current?.()}>
-                ⏹ Done early
-              </button>
+              {mode === "practice" ? (
+                <>
+                  {countdown.reachedZero && (
+                    <p className="muted small">Suggested time is up — but take as long as you need, then stop when ready.</p>
+                  )}
+                  <button type="button" className="danger" onClick={submitPracticeItem}>
+                    ⏹ Stop &amp; get feedback
+                  </button>
+                </>
+              ) : (
+                <button type="button" className="danger" onClick={() => stopEarlyRef.current?.()}>
+                  ⏹ Done early
+                </button>
+              )}
             </div>
           )}
         </div>
@@ -236,7 +350,7 @@ export default function ToeflPractice() {
 
       {stage === "processing" && (
         <div className="card center">
-          <p className="muted">Transcribing all recordings and scoring your response… this can take a minute on CPU.</p>
+          <p className="muted">Transcribing and scoring your response… this can take a moment on CPU.</p>
         </div>
       )}
 
@@ -248,7 +362,33 @@ export default function ToeflPractice() {
       )}
 
       {stage === "result" && result && promptSet && (
-        <ResultView result={result} taskType={taskType!} onRetry={() => runSet(promptSet)} onBack={backToPrompts} onChangeTask={reset} />
+        <ResultView
+          result={result}
+          taskType={taskType!}
+          actions={
+            mode === "practice" ? (
+              <>
+                <button type="button" className="primary" onClick={() => startPracticeItem(promptSet, itemIndex)}>
+                  🔁 Redo this {taskType === "listen_repeat" ? "sentence" : "question"}
+                </button>
+                {itemIndex < total - 1 ? (
+                  <button type="button" className="primary" onClick={() => startPracticeItem(promptSet, itemIndex + 1)}>
+                    Next {taskType === "listen_repeat" ? "sentence" : "question"} →
+                  </button>
+                ) : (
+                  <button type="button" className="primary" onClick={backToPrompts}>✅ Finish set</button>
+                )}
+                <button type="button" onClick={reset}>Change task type</button>
+              </>
+            ) : (
+              <>
+                <button type="button" className="primary" onClick={() => runExamSet(promptSet)}>🔁 Retake this set</button>
+                <button type="button" onClick={backToPrompts}>Try another prompt</button>
+                <button type="button" onClick={reset}>Change task type</button>
+              </>
+            )
+          }
+        />
       )}
     </div>
   );
@@ -257,15 +397,11 @@ export default function ToeflPractice() {
 function ResultView({
   result,
   taskType,
-  onRetry,
-  onBack,
-  onChangeTask,
+  actions,
 }: {
   result: ToeflAttemptResponse;
   taskType: TaskType;
-  onRetry: () => void;
-  onBack: () => void;
-  onChangeTask: () => void;
+  actions: ReactNode;
 }) {
   const fb = result.feedback;
   const prevAttempts = result.previous_attempts.filter((a) => a.id !== result.session_id);
@@ -282,7 +418,7 @@ function ResultView({
 
         {prevAttempts.length > 0 && (
           <div className="card sub" style={{ marginTop: 14, marginBottom: 0 }}>
-            <p className="section-title" style={{ marginBottom: 8 }}>📈 This set over time</p>
+            <p className="section-title" style={{ marginBottom: 8 }}>📈 Over time</p>
             <div className="row">
               {result.previous_attempts.map((a) => (
                 <span
@@ -370,11 +506,7 @@ function ResultView({
         </div>
       </div>
 
-      <div className="row" style={{ marginTop: 16 }}>
-        <button type="button" className="primary" onClick={onRetry}>🔁 Retry this set</button>
-        <button type="button" onClick={onBack}>Try another prompt</button>
-        <button type="button" onClick={onChangeTask}>Change task type</button>
-      </div>
+      <div className="row" style={{ marginTop: 16 }}>{actions}</div>
     </div>
   );
 }

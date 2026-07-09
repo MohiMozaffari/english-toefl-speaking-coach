@@ -228,6 +228,7 @@ async def toefl_attempt(
     audio: List[UploadFile] = File(...),
     task_type: str = Form(...),
     prompt_id: str = Form(...),
+    item_index: int | None = Form(None),
     profile_id: int | None = Form(None),
 ):
     config = load_config()
@@ -239,10 +240,27 @@ async def toefl_attempt(
     if not prompt_item:
         raise AppError("Unknown TOEFL prompt id.", code="bad_prompt_id")
 
-    items = prompt_item["sentences"] if task_type == "listen_repeat" else prompt_item["questions"]
+    all_items = prompt_item["sentences"] if task_type == "listen_repeat" else prompt_item["questions"]
+
+    # Same content pool and grading pipeline for both modes; only the unit differs.
+    # Exam mode (item_index is None) grades the whole set in one report saved as
+    # one History entry. Practice mode (item_index set) grades a single item so it
+    # can show immediate per-item feedback and be re-done, saved as its own entry.
+    if item_index is not None:
+        if not 0 <= item_index < len(all_items):
+            raise AppError("Item index out of range.", code="bad_item_index")
+        items = [all_items[item_index]]
+        prompt_ref = f"toefl:{task_type}:{prompt_id}:{item_index}"
+        unit = "sentence" if task_type == "listen_repeat" else "question"
+        task_title = f"{prompt_item['title']} — {unit} {item_index + 1}"
+    else:
+        items = all_items
+        prompt_ref = f"toefl:{task_type}:{prompt_id}"
+        task_title = prompt_item["title"]
+
     if len(audio) != len(items):
         raise AppError(
-            f"Expected {len(items)} recordings for this set but received {len(audio)}.",
+            f"Expected {len(items)} recording(s) but received {len(audio)}.",
             code="item_count_mismatch",
         )
 
@@ -263,7 +281,6 @@ async def toefl_attempt(
             transcripts.append("[No usable audio for this item]")
 
     combined_metrics = metrics_mod.combine_metrics(item_metrics)
-    prompt_ref = f"toefl:{task_type}:{prompt_id}"
 
     all_too_short = all(s == "too_short" for s in item_statuses)
     if all_too_short:
@@ -287,7 +304,7 @@ async def toefl_attempt(
     session_id = db.insert_session(
         mode="toefl",
         task_type=task_type,
-        task_title=prompt_item["title"],
+        task_title=task_title,
         task_prompt="; ".join(items),
         transcript=combined_transcript,
         feedback=feedback,
