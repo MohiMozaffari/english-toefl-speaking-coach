@@ -713,6 +713,43 @@ label:first-child {
 
 .pop-in { animation: pop 0.3s ease; }
 
+/* ---------------------------------------------------------------------------
+   Mobile: large tap targets, one-handed practice flows (~380px+)
+--------------------------------------------------------------------------- */
+
+@media (max-width: 480px) {
+  button, .btn {
+    min-height: 44px;
+    padding: 10px 16px;
+    font-size: 0.95rem;
+  }
+  button.small {
+    min-height: 38px;
+    padding: 7px 13px;
+  }
+  .topic-item {
+    padding: 16px;
+    min-height: 44px;
+  }
+  .timer-display {
+    font-size: 2.5rem;
+  }
+  /* Primary recording/submit actions get full-width, thumb-reachable buttons
+     instead of small inline ones, on the pages that record audio. */
+  .card .center > button.primary,
+  .card .center > button.danger {
+    width: 100%;
+    max-width: 320px;
+  }
+  .page-title {
+    font-size: 1.25rem;
+  }
+  .content {
+    padding-left: 14px;
+    padding-right: 14px;
+  }
+}
+
 /* Utility */
 .visually-hidden {
   position: absolute;
