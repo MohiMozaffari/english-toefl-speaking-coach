@@ -13,7 +13,7 @@
   --speed: 160ms;
   /* Fluid base size: scales smoothly across phone -> tablet -> desktop; all
      rem-sized text follows it, and it still stacks with browser zoom. */
-  font-size: clamp(16px, 3.6vw + 10px, 18px);
+  font-size: clamp(15px, 1vw + 13px, 16px);
 }
 
 :root,
@@ -142,7 +142,7 @@ code {
   position: sticky;
   top: 0;
   height: 100vh;
-  overflow-y: auto;
+  overflow-y: visible;
 }
 
 .sidebar .brand {
@@ -211,6 +211,30 @@ code {
   margin: 0 auto;
   width: 100%;
   animation: fade-in 0.25s ease;
+}
+
+/* Per-section accent: each practice area gets its own hue so it's instantly
+   recognizable, without redefining every component -- everything already
+   reads from --accent/--accent-strong/--accent-soft/--accent-gradient. */
+.content[data-section="toefl"] {
+  --accent: #4f6bff; --accent-strong: #2f4be0; --accent-soft: rgba(79, 107, 255, 0.14);
+  --accent-gradient: linear-gradient(135deg, #4f6bff, #2f4be0);
+}
+.content[data-section="general"] {
+  --accent: #12b0a0; --accent-strong: #0b8c7f; --accent-soft: rgba(18, 176, 160, 0.14);
+  --accent-gradient: linear-gradient(135deg, #12b0a0, #0b8c7f);
+}
+.content[data-section="shadowing"] {
+  --accent: #9b6bff; --accent-strong: #7c3aed; --accent-soft: rgba(155, 107, 255, 0.16);
+  --accent-gradient: linear-gradient(135deg, #9b6bff, #7c3aed);
+}
+.content[data-section="pronunciation"] {
+  --accent: #e0559b; --accent-strong: #c23c80; --accent-soft: rgba(224, 85, 155, 0.14);
+  --accent-gradient: linear-gradient(135deg, #e0559b, #c23c80);
+}
+.content[data-section="listening"] {
+  --accent: #f0924a; --accent-strong: #d4762c; --accent-soft: rgba(240, 146, 74, 0.15);
+  --accent-gradient: linear-gradient(135deg, #f0924a, #d4762c);
 }
 
 .mobile-topbar {
@@ -625,11 +649,11 @@ label:first-child {
 }
 
 .timer-display {
-  font-size: 3rem;
+  font-size: 3.6rem;
   font-weight: 800;
   text-align: center;
   font-variant-numeric: tabular-nums;
-  margin: 8px 0;
+  margin: 10px 0;
 }
 
 .timer-display.prep { color: var(--warn); }

@@ -79,7 +79,7 @@ export default function Layout() {
         </div>
       </nav>
 
-      <main className="content" key={location.pathname}>
+      <main className="content" data-section={location.pathname.split("/")[1] || "dashboard"} key={location.pathname}>
         <Outlet />
       </main>
 
