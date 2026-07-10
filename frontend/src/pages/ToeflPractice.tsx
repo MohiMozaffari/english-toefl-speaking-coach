@@ -19,15 +19,6 @@ const TASK_DESCRIPTIONS: Record<string, string> = {
     "You'll be asked 4 questions in a row about one familiar topic, like a simulated interview. No prep time — 45 seconds to answer each question.",
 };
 
-// A single strategy hint per task, shown in Practice mode only. Phase 5 replaces
-// this with richer, per-item tips stored as data.
-const PRACTICE_TIPS: Record<string, string> = {
-  listen_repeat:
-    "Listen to the whole sentence before you speak, then match its rhythm and stress — a full sentence said smoothly scores better than every word said choppily.",
-  interview:
-    "Answer the actual question in your first sentence, then add one reason and one concrete example. A clear, developed 3-4 sentence answer beats a long, rambling one.",
-};
-
 type Mode = "practice" | "exam";
 type Stage = "select_task" | "select_prompt" | "running" | "processing" | "result" | "error";
 type TaskType = "listen_repeat" | "interview";
@@ -301,11 +292,12 @@ export default function ToeflPractice() {
             </span>
           </div>
 
-          {mode === "practice" && (
-            <div className="card sub" style={{ margin: "12px 0" }}>
-              💡 <strong>Tip:</strong> {PRACTICE_TIPS[taskType!]}
-            </div>
-          )}
+          {mode === "practice" &&
+            tasksData.tips[taskType!].before[itemIndex].map((tip, i) => (
+              <div className="card sub" style={{ margin: "12px 0" }} key={i}>
+                💡 <strong>Tip:</strong> {tip}
+              </div>
+            ))}
 
           {"picture_caption" in promptSet && (
             <div className="transcript-box center" style={{ margin: "14px 0" }}>
@@ -365,6 +357,7 @@ export default function ToeflPractice() {
         <ResultView
           result={result}
           taskType={taskType!}
+          improvementTip={mode === "practice" ? tasksData.tips[taskType!].after[itemIndex] : undefined}
           actions={
             mode === "practice" ? (
               <>
@@ -397,10 +390,12 @@ export default function ToeflPractice() {
 function ResultView({
   result,
   taskType,
+  improvementTip,
   actions,
 }: {
   result: ToeflAttemptResponse;
   taskType: TaskType;
+  improvementTip?: string;
   actions: ReactNode;
 }) {
   const fb = result.feedback;
@@ -505,6 +500,12 @@ function ResultView({
           <ReplayButton text={`${fb.score_reason} ${fb.focus_next}`} label="🔊 Hear summary" />
         </div>
       </div>
+
+      {improvementTip && (
+        <div className="card sub">
+          💡 <strong>For next time:</strong> {improvementTip}
+        </div>
+      )}
 
       <div className="row" style={{ marginTop: 16 }}>{actions}</div>
     </div>

@@ -85,9 +85,15 @@ export interface InterviewSet {
 
 export type ToeflSet = ListenRepeatSet | InterviewSet;
 
+export interface ToeflTaskTips {
+  before: string[][];
+  after: string[];
+}
+
 export interface ToeflTopics {
   tasks: { listen_repeat: ListenRepeatSet[]; interview: InterviewSet[] };
   timing: { listen_repeat: { item_seconds: number[] }; interview: { item_seconds: number[] } };
+  tips: { listen_repeat: ToeflTaskTips; interview: ToeflTaskTips };
 }
 
 export interface AttemptSummary {
@@ -160,6 +166,13 @@ export interface Recommendation {
   action: string;
 }
 
+export interface BandAdvice {
+  band: number;
+  cefr: string;
+  advice: string;
+  based_on_score: number;
+}
+
 export interface DashboardData {
   profile: Profile;
   xp: { total: number; level: number; xp_into_level: number; xp_for_next: number; today: number; daily_goal: number };
@@ -171,6 +184,7 @@ export interface DashboardData {
   delivery_trend: { created_at: string; wpm: number; pauses: number; ttr: number; confidence: number }[];
   weaknesses: Weakness[];
   recommendations: Recommendation[];
+  band_advice: BandAdvice | null;
   achievements: Achievement[];
   weak_contrasts: { contrast: string; attempts: number; correct: number; accuracy: number }[];
 }

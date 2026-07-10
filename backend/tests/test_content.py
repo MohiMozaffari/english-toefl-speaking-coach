@@ -28,6 +28,24 @@ def test_toefl_timing_matches_official_2026_format():
     assert timing["interview"]["item_seconds"] == [45, 45, 45, 45]
 
 
+def test_toefl_tips_cover_every_item_position():
+    tips = content.get_toefl_tips()
+    lr_before, lr_after = tips["listen_repeat"]["before"], tips["listen_repeat"]["after"]
+    iv_before, iv_after = tips["interview"]["before"], tips["interview"]["after"]
+    assert len(lr_before) == len(lr_after) == 7
+    assert len(iv_before) == len(iv_after) == 4
+    assert any(len(g) == 2 for g in lr_before), "spec calls for 1-2 tips per item; expected some items with 2"
+    assert any(len(g) == 2 for g in iv_before), "spec calls for 1-2 tips per item; expected some items with 2"
+    for tip_group in lr_before + iv_before:
+        assert 1 <= len(tip_group) <= 2
+        for tip in tip_group:
+            assert tip.strip()
+            assert len(tip.split()) <= 20, tip
+    for tip in lr_after + iv_after:
+        assert tip.strip()
+        assert len(tip.split()) <= 25, tip
+
+
 def test_find_toefl_prompt_roundtrip():
     tasks = content.get_toefl_tasks()
     first = tasks["listen_repeat"][0]

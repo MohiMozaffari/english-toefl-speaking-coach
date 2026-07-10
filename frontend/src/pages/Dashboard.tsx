@@ -50,8 +50,19 @@ export default function Dashboard() {
   }
   if (!data) return <LoadingCard lines={5} />;
 
-  const { xp, streak, totals, weekly, score_trend, radar, delivery_trend, weaknesses, recommendations, achievements } =
-    data;
+  const {
+    xp,
+    streak,
+    totals,
+    weekly,
+    score_trend,
+    radar,
+    delivery_trend,
+    weaknesses,
+    recommendations,
+    band_advice,
+    achievements,
+  } = data;
   const goalFraction = xp.daily_goal ? xp.today / xp.daily_goal : 0;
   const radarData = radar.filter((r) => r.value !== null);
   const earned = achievements.filter((a) => a.earned);
@@ -211,6 +222,18 @@ export default function Dashboard() {
           )}
         </div>
       </div>
+
+      {/* Coach: CEFR band advice */}
+      {band_advice && (
+        <div className="card" style={{ marginTop: 14 }}>
+          <p className="section-title">🎯 Your level right now</p>
+          <p className="small" style={{ margin: 0 }}>
+            Most recent TOEFL score: <strong>{band_advice.based_on_score} / 6</strong> (
+            {band_advice.cefr} on the CEFR scale)
+          </p>
+          <p className="muted small" style={{ margin: "4px 0 0" }}>{band_advice.advice}</p>
+        </div>
+      )}
 
       {/* Coach: weaknesses + recommendations */}
       <div className="grid cols-2" style={{ marginTop: 14 }}>

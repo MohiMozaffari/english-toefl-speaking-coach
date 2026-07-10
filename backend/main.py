@@ -96,7 +96,11 @@ def general_topics():
 
 @app.get("/api/topics/toefl")
 def toefl_topics():
-    return {"tasks": content.get_toefl_tasks(), "timing": content.get_toefl_timing()}
+    return {
+        "tasks": content.get_toefl_tasks(),
+        "timing": content.get_toefl_timing(),
+        "tips": content.get_toefl_tips(),
+    }
 
 
 @app.get("/api/shadowing/passages")

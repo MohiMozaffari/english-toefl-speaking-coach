@@ -149,6 +149,7 @@ def dashboard(profile_id: int) -> dict:
         "delivery_trend": trend_metrics,
         "weaknesses": coach.weaknesses_from_snapshot(snapshot),
         "recommendations": coach.recommendations(profile_id),
+        "band_advice": coach.current_band_advice(profile_id),
         "achievements": gamification.achievements_view(profile_id),
         "weak_contrasts": [p for p in pair_stats if p["attempts"] >= 3],
     }

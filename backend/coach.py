@@ -148,6 +148,34 @@ def recommendations(profile_id: int) -> list[dict]:
     return recs[:5]
 
 
+# CEFR-aligned advice per 1-6 score band (references/tips-style.md in the
+# toefl-app-content skill). Rule-based lookup, not an LLM call -- deterministic
+# and free, matching the rest of this module's philosophy.
+BAND_ADVICE = {
+    6: {"cefr": "C2", "advice": "Fine-tune precision and nuance — vary your sentence structure and idiom, and polish natural-sounding delivery."},
+    5: {"cefr": "C1", "advice": "Tighten accuracy under time pressure and develop your ideas more fully to iron out the last small slips."},
+    4: {"cefr": "B2", "advice": "Build fluency and range — connect ideas with clearer linking words and reach beyond everyday vocabulary."},
+    3: {"cefr": "B1", "advice": "Focus on clear, complete sentences that answer the question directly, and drill common grammar patterns."},
+    2: {"cefr": "A2", "advice": "Practice core sentence patterns and high-frequency vocabulary, and slow down enough to stay clear."},
+    1: {"cefr": "A1", "advice": "Build basic, correct sentences and clear pronunciation of common words before adding complexity."},
+}
+
+
+def band_advice(band: int) -> dict:
+    """CEFR-aligned advice for a single 1-6 score band. Clamped like every score in this app."""
+    clamped = max(1, min(6, round(band)))
+    return {"band": clamped, **BAND_ADVICE[clamped]}
+
+
+def current_band_advice(profile_id: int) -> dict | None:
+    """Advice keyed to the learner's most recent TOEFL score -- evidence-backed,
+    not a generic tip. None until they have at least one scored attempt."""
+    snap = build_learner_snapshot(profile_id)
+    if not snap["recent_scores"]:
+        return None
+    return {"based_on_score": snap["recent_scores"][0], **band_advice(snap["recent_scores"][0])}
+
+
 def learner_context_for_llm(profile_id: int) -> str:
     """Compact history block injected into feedback prompts, so the AI coach
     remembers this learner. Empty string when there's nothing useful yet."""

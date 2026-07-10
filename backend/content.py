@@ -6,6 +6,7 @@ TOEFL prompts are fetched from data/toefl_coach.db, seeded via seed_db.py.
 """
 
 import database
+import speaking_tips
 
 GENERAL_TOPICS = [
     # Daily life
@@ -70,6 +71,10 @@ def get_toefl_timing() -> dict:
         "listen_repeat": {"item_seconds": database.fetch_toefl_response_times("listen_repeat")},
         "interview": {"item_seconds": database.fetch_toefl_response_times("interview")},
     }
+
+
+def get_toefl_tips() -> dict:
+    return speaking_tips.get_toefl_tips()
 
 
 def find_toefl_prompt(task_type: str, prompt_id: str) -> dict | None:
