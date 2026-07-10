@@ -771,5 +771,135 @@
         {"question_text": "If you had to move to a new city next month, what would be the hardest part for you?", "response_time": 45}
       ]
     }
+  ],
+
+  "toefl_reading": [
+    {
+      "set_id": "rd_complete_01",
+      "task_type": "complete_words",
+      "set_title": "How Coral Reefs Form",
+      "passage": "Coral reefs form when tiny marine animals called polyps build hard skeletons from calcium carbonate. Over {{b1}} of years, these skeletons {{b2}} on top of each other, gradually {{b3}} into massive reef structures. Reefs {{b4}} shallow, warm, and sunlit water, since the algae living inside coral polyps {{b5}} sunlight to produce energy. In {{b6}}, reefs provide shelter for an enormous {{b7}} of marine species, {{b8}} they cover less than one percent of the ocean floor. Unfortunately, rising water temperatures can cause coral to {{b9}} its algae, a process known as bleaching, which threatens the {{b10}} of entire reef ecosystems.",
+      "items": [
+        {"blank_id": "b1", "hint": "thous___", "answer": "thousands", "explanation": "\"Over ___ of years\" needs a large plural time unit."},
+        {"blank_id": "b2", "hint": "accu______", "answer": "accumulate", "explanation": "Skeletons build up layer on layer over time."},
+        {"blank_id": "b3", "hint": "for____", "answer": "forming", "explanation": "A gerund is needed after \"gradually\" to describe the ongoing process."},
+        {"blank_id": "b4", "hint": "req_____", "answer": "require", "explanation": "Reefs need these specific conditions to exist."},
+        {"blank_id": "b5", "hint": "n___", "answer": "need", "explanation": "Algae need sunlight for photosynthesis, matching the reason clause that follows."},
+        {"blank_id": "b6", "hint": "f__t", "answer": "fact", "explanation": "\"In fact\" is a fixed transitional phrase introducing an elaboration."},
+        {"blank_id": "b7", "hint": "var____y", "answer": "variety", "explanation": "\"An enormous ___ of marine species\" calls for variety or range."},
+        {"blank_id": "b8", "hint": "alth____h", "answer": "although", "explanation": "Introduces the contrast between small area and enormous biodiversity."},
+        {"blank_id": "b9", "hint": "ex___", "answer": "expel", "explanation": "Corals push out (expel) their algae during bleaching."},
+        {"blank_id": "b10", "hint": "surv____l", "answer": "survival", "explanation": "Bleaching threatens whether reef ecosystems continue to exist."}
+      ]
+    },
+    {
+      "set_id": "rd_complete_02",
+      "task_type": "complete_words",
+      "set_title": "The Invention of the Printing Press",
+      "passage": "In the 1400s, Johannes Gutenberg developed a printing press that used movable metal type. Before this {{b1}}, books had to be copied by {{b2}}, which made them expensive and {{b3}}. Gutenberg's press allowed identical pages to be {{b4}} quickly and cheaply, {{b5}} the number of books available across Europe. As literacy {{b6}}, ordinary people gained access to ideas that had once been {{b7}} to scholars and clergy. Some historians {{b8}} that the printing press helped spark the Renaissance and the Reformation by {{b9}} the rapid spread of new ideas. Few inventions have had such a lasting {{b10}} on how humans share knowledge.",
+      "items": [
+        {"blank_id": "b1", "hint": "inven____", "answer": "invention", "explanation": "Refers back to the press just described."},
+        {"blank_id": "b2", "hint": "h__d", "answer": "hand", "explanation": "\"Copied by hand\" is a fixed expression for manual copying."},
+        {"blank_id": "b3", "hint": "r__e", "answer": "rare", "explanation": "Pairs with \"expensive\" to describe scarce, hard-to-obtain books."},
+        {"blank_id": "b4", "hint": "prin___d", "answer": "printed", "explanation": "Matches \"pages ... to be ___\" in the context of a printing press."},
+        {"blank_id": "b5", "hint": "incre_____g", "answer": "increasing", "explanation": "Participle phrase describing the result of printing quickly and cheaply."},
+        {"blank_id": "b6", "hint": "spr___", "answer": "spread", "explanation": "Matches \"as literacy ___\" -- literacy becoming more widespread."},
+        {"blank_id": "b7", "hint": "lim____d", "answer": "limited", "explanation": "Contrasts with \"gained access,\" meaning access was previously restricted."},
+        {"blank_id": "b8", "hint": "ar___", "answer": "argue", "explanation": "Historians commonly \"argue that\" when presenting a claim."},
+        {"blank_id": "b9", "hint": "en_____g", "answer": "enabling", "explanation": "Participle explaining how the press helped spark change."},
+        {"blank_id": "b10", "hint": "im____t", "answer": "impact", "explanation": "\"Lasting ___ on\" is a common collocation meaning lasting effect."}
+      ]
+    },
+    {
+      "set_id": "rd_complete_03",
+      "task_type": "complete_words",
+      "set_title": "Why Bats Use Echolocation",
+      "passage": "Many bat species hunt for insects in total darkness using a technique called echolocation. As a bat {{b1}}, it emits high-pitched sounds that humans cannot {{b2}}. These sound waves travel through the air until they {{b3}} an object, such as a moth, and bounce back toward the bat. By {{b4}} the time it takes for the echo to {{b5}}, the bat can judge the object's distance with remarkable {{b6}}. Some bats can even {{b7}} between a smooth surface and a textured one based on how the echo changes. This {{b8}} ability lets bats navigate cluttered spaces and {{b9}} tiny, fast prey without relying on {{b10}} at all.",
+      "items": [
+        {"blank_id": "b1", "hint": "fl___", "answer": "flies", "explanation": "\"As a bat ___\" needs a subject-appropriate verb matching \"emits\"."},
+        {"blank_id": "b2", "hint": "he__", "answer": "hear", "explanation": "The sounds are too high-pitched for the human ear to hear."},
+        {"blank_id": "b3", "hint": "str____", "answer": "strike", "explanation": "Sound waves hitting an object, matching \"bounce back\" that follows."},
+        {"blank_id": "b4", "hint": "meas_____g", "answer": "measuring", "explanation": "A gerund is needed after the preposition \"by\"."},
+        {"blank_id": "b5", "hint": "ret____", "answer": "return", "explanation": "Matches \"for the echo to ___\" -- the echo returning to the bat."},
+        {"blank_id": "b6", "hint": "preci_____", "answer": "precision", "explanation": "\"With remarkable ___\" pairs with judging distance accurately."},
+        {"blank_id": "b7", "hint": "disting_____", "answer": "distinguish", "explanation": "\"Can even ___ between X and Y\" is a fixed pattern."},
+        {"blank_id": "b8", "hint": "remark_____", "answer": "remarkable", "explanation": "Echoes the earlier description of the ability as impressive."},
+        {"blank_id": "b9", "hint": "ca___", "answer": "catch", "explanation": "Bats catching prey, paired with \"navigate\" as a parallel verb."},
+        {"blank_id": "b10", "hint": "eyesi___", "answer": "eyesight", "explanation": "Contrasts with echolocation -- bats don't need vision."}
+      ]
+    },
+    {
+      "set_id": "rd_daily_01",
+      "task_type": "read_daily_life",
+      "set_title": "Course Registration Confirmation",
+      "stimulus_kind": "email",
+      "passage": "Subject: You're Registered!\n\nDear Priya,\n\nThis confirms your registration for ENG 210: Introduction to Linguistics, meeting Tuesdays and Thursdays at 2:00 PM starting September 8th. Please purchase the course textbook before the first class. If you need to drop the course, you must do so by September 12th to receive a full refund. Contact the registrar's office with any questions.\n\nBest,\nOffice of the Registrar",
+      "items": [
+        {"question_text": "What is the main purpose of this email?", "options": ["To cancel a course", "To confirm a course registration", "To request a tuition payment", "To announce a new course"], "answer_index": 1, "explanation": "The email opens by confirming Priya's registration for ENG 210."},
+        {"question_text": "According to the email, what should Priya do before the first class?", "options": ["Email the registrar", "Meet with an advisor", "Buy the textbook", "Pay a late fee"], "answer_index": 2, "explanation": "The email instructs her to purchase the textbook before the first class."},
+        {"question_text": "What does the email say happens if Priya drops the course after September 12th?", "options": ["She receives a full refund", "She does not receive a full refund", "She must retake the course", "Nothing changes"], "answer_index": 1, "explanation": "A full refund requires dropping by September 12th, implying no full refund after that date."}
+      ]
+    },
+    {
+      "set_id": "rd_daily_02",
+      "task_type": "read_daily_life",
+      "set_title": "Library Study Room Policy",
+      "stimulus_kind": "notice",
+      "passage": "NOTICE: New Study Room Policy\n\nStarting Monday, all group study rooms on the third floor must be reserved online at least two hours in advance. Walk-in bookings are no longer accepted. Reservations are limited to two hours per group per day. Rooms not claimed within 15 minutes of the reservation time will be released to the next group on the waitlist.",
+      "items": [
+        {"question_text": "What is the main purpose of this notice?", "options": ["To announce new study room hours", "To explain a new room reservation policy", "To advertise a new library building", "To ask students to donate books"], "answer_index": 1, "explanation": "The notice explains the new online reservation requirement for study rooms."},
+        {"question_text": "What happens if a group doesn't claim its reserved room within 15 minutes?", "options": ["The reservation is extended automatically", "The room is given to the next group waiting", "The group is charged a fee", "The room stays empty for the day"], "answer_index": 1, "explanation": "The notice states unclaimed rooms are released to the next group on the waitlist."}
+      ]
+    },
+    {
+      "set_id": "rd_daily_03",
+      "task_type": "read_daily_life",
+      "set_title": "Campus Photography Club Post",
+      "stimulus_kind": "social_post",
+      "passage": "Photography Club Meetup this Friday!\n\nJoin us at 5 PM in the Student Union, Room 214, for a beginner-friendly workshop on night photography. Bring your own camera or phone -- we'll cover a few basics before heading outside to shoot the campus at sunset. Free snacks provided. Drop a comment if you're coming so we know how many chairs to set up!",
+      "items": [
+        {"question_text": "What is this post mainly about?", "options": ["Selling used cameras", "Inviting students to a photography workshop", "Announcing a photography contest winner", "Requesting donations for new equipment"], "answer_index": 1, "explanation": "The post invites students to a Friday photography workshop."},
+        {"question_text": "What does the post ask readers to do if they plan to attend?", "options": ["Pay an entry fee", "Bring a friend", "Leave a comment", "Sign up online"], "answer_index": 2, "explanation": "The post asks readers to comment if they're coming, to plan seating."}
+      ]
+    },
+    {
+      "set_id": "rd_academic_01",
+      "task_type": "read_academic",
+      "set_title": "The Placebo Effect",
+      "passage": "When patients are given a treatment they believe is effective, they sometimes improve even if the treatment has no active medical ingredient. This phenomenon, known as the placebo effect, has puzzled researchers for decades. In clinical trials, one group of patients often receives an actual drug while another receives a placebo, typically a sugar pill with no therapeutic properties. Remarkably, patients who receive the placebo frequently report reduced pain, improved mood, or fewer symptoms, even though they have taken nothing that should produce these changes physiologically.\n\nResearchers believe the placebo effect arises from a combination of expectation and conditioning. When a patient expects a treatment to work, the brain can release natural chemicals, such as endorphins, that genuinely reduce the sensation of pain. Prior experience also plays a role: a patient who has been helped by pills in the past may unconsciously associate the act of taking a pill with feeling better, regardless of its contents.\n\nThe placebo effect complicates medical research because it means any new treatment must outperform a placebo, not simply produce improvement on its own. At the same time, understanding the placebo effect has practical value: some doctors now study how communication, ritual, and expectation can be used ethically to support conventional treatment, rather than replace it.",
+      "items": [
+        {"question_text": "According to the passage, what is a placebo?", "question_kind": "factual", "options": ["A drug with strong side effects", "A substance with no therapeutic properties", "An experimental surgery", "A type of pain medication"], "answer_index": 1, "explanation": "Paragraph 1 defines a placebo as 'typically a sugar pill with no therapeutic properties.'"},
+        {"question_text": "According to the passage, all of the following are mentioned as possible placebo effects EXCEPT", "question_kind": "negative_factual", "options": ["Reduced pain", "Improved mood", "Fewer symptoms", "Faster wound healing"], "answer_index": 3, "explanation": "The passage mentions reduced pain, improved mood, and fewer symptoms, but never wound healing."},
+        {"question_text": "The word 'conditioning' in paragraph 2 is closest in meaning to", "question_kind": "vocabulary", "options": ["A physical exercise routine", "A learned association through repeated experience", "A medical diagnosis", "A type of muscle weakness"], "answer_index": 1, "explanation": "'Conditioning' refers to associating pill-taking with feeling better through past experience -- a learned association."},
+        {"question_text": "It can be inferred from the passage that new medical treatments are tested against placebos in order to", "question_kind": "inference", "options": ["Reduce the cost of clinical trials", "Determine whether a treatment works better than expectation alone", "Avoid the need for government approval", "Make patients feel more comfortable"], "answer_index": 1, "explanation": "Paragraph 3 states a treatment must outperform a placebo, implying trials isolate the treatment's effect from expectation alone."},
+        {"question_text": "Why does the author mention endorphins in paragraph 2?", "question_kind": "rhetorical_purpose", "options": ["To criticize the use of placebos in research", "To explain a possible biological mechanism behind the placebo effect", "To argue that placebos are more effective than real drugs", "To describe a side effect of modern medicine"], "answer_index": 1, "explanation": "The mention of endorphins supports the explanation of how expectation could produce a real physiological change."}
+      ]
+    },
+    {
+      "set_id": "rd_academic_02",
+      "task_type": "read_academic",
+      "set_title": "Urban Heat Islands",
+      "passage": "Cities are often several degrees warmer than the surrounding countryside, a phenomenon known as the urban heat island effect. This temperature difference occurs because materials commonly used in cities, such as asphalt and concrete, absorb and retain heat far more effectively than natural surfaces like grass, soil, or forest canopy. During the day, these materials soak up solar energy, and at night they slowly release that stored heat back into the air, preventing urban areas from cooling down as quickly as rural ones.\n\nSeveral factors intensify the effect. Tall buildings can trap heat at street level by blocking wind that would otherwise carry it away. Vehicle traffic and air conditioning units release additional heat directly into the surrounding air. Meanwhile, the removal of trees and green space for construction eliminates natural shading and the cooling effect of plant evaporation.\n\nUrban heat islands are not merely uncomfortable; they carry real public health risks, particularly during heat waves, when nighttime temperatures fail to drop enough to give residents relief. In response, some cities have begun installing reflective or 'cool' roofing materials, expanding tree cover, and designing parks specifically to interrupt concrete surfaces and reintroduce green space into dense neighborhoods.",
+      "items": [
+        {"question_text": "According to the passage, why do cities retain more heat than surrounding areas?", "question_kind": "factual", "options": ["Cities have more rainfall", "Cities use materials that absorb and hold heat", "Cities are located at higher elevations", "Cities have fewer people"], "answer_index": 1, "explanation": "Paragraph 1 explains that asphalt and concrete absorb and retain heat more than natural surfaces."},
+        {"question_text": "In paragraph 1, what does the word 'that' in 'they slowly release that stored heat' refer to?", "question_kind": "reference", "options": ["Solar energy absorbed during the day", "Cool night air", "Wind blocked by buildings", "Rainfall collected on rooftops"], "answer_index": 0, "explanation": "'That stored heat' refers back to the solar energy the materials soaked up during the day."},
+        {"question_text": "Which sentence in paragraph 2 explains how the loss of trees contributes to the heat island effect?", "question_kind": "select_sentence", "options": ["\"Tall buildings can trap heat at street level by blocking wind that would otherwise carry it away.\"", "\"Vehicle traffic and air conditioning units release additional heat directly into the surrounding air.\"", "\"Meanwhile, the removal of trees and green space for construction eliminates natural shading and the cooling effect of plant evaporation.\"", "\"Urban heat islands are not merely uncomfortable; they carry real public health risks.\""], "answer_index": 2, "explanation": "This sentence directly links tree removal to the loss of shading and evaporative cooling."},
+        {"question_text": "Look at the four positions in paragraph 3 that indicate where the following sentence could be added: 'Even a few degrees of difference can make heat waves significantly more dangerous.' Position 1 is right before 'Urban heat islands are not merely uncomfortable'; Position 2 is right after 'give residents relief'; Position 3 is right after 'cool roofing materials'; Position 4 is right after 'interrupt concrete surfaces'. Where would the sentence best fit?", "question_kind": "insert_text", "options": ["Position 1", "Position 2", "Position 3", "Position 4"], "answer_index": 1, "explanation": "The inserted sentence elaborates on why the health risk matters, fitting right after the sentence describing that risk."},
+        {"question_text": "Why does the author mention 'cool' roofing materials in the final paragraph?", "question_kind": "rhetorical_purpose", "options": ["To criticize cities for reacting too slowly", "To give an example of how cities are responding to the problem", "To argue that technology cannot solve the heat island effect", "To compare rooftops in different countries"], "answer_index": 1, "explanation": "The final paragraph lists cool roofing as one of several city responses to the heat island effect."}
+      ]
+    },
+    {
+      "set_id": "rd_academic_03",
+      "task_type": "read_academic",
+      "set_title": "The Domestication of the Dog",
+      "passage": "Dogs were the first animal species domesticated by humans, likely tens of thousands of years before any other. Exactly how this domestication began remains debated among scientists, but one widely accepted theory suggests that wolves gradually domesticated themselves. According to this view, wolves that were less fearful of humans began lingering near early settlements to scavenge discarded food. Over many generations, natural selection favored the calmer, less aggressive wolves that tolerated human presence, since they had reliable access to food scraps that more anxious wolves avoided.\n\nAs these animals became increasingly comfortable around people, humans likely began to notice practical benefits: the animals could alert them to approaching danger and assist with tracking prey. Selective breeding, whether intentional or accidental, gradually produced animals that were smaller, more sociable, and more attuned to human behavior than their wild ancestors.\n\nGenetic evidence broadly supports this timeline, though researchers still disagree about precisely where and how many times domestication occurred. What is clear is that the relationship transformed both species: dogs evolved traits suited to living alongside humans, while humans gained a companion whose skills and loyalty would prove useful across thousands of years of shared history.",
+      "items": [
+        {"question_text": "According to the passage, what is one widely accepted theory about how dogs were domesticated?", "question_kind": "factual", "options": ["Humans captured and tamed wild wolf pups", "Wolves gradually domesticated themselves by tolerating human presence", "Humans bred dogs specifically for hunting from the start", "Dogs evolved separately from wolves"], "answer_index": 1, "explanation": "The passage describes the self-domestication theory in which less fearful wolves lingered near settlements."},
+        {"question_text": "The word 'scavenge' in paragraph 1 is closest in meaning to", "question_kind": "vocabulary", "options": ["To hunt live prey", "To search for and collect discarded food", "To bury for later use", "To share equally among a group"], "answer_index": 1, "explanation": "In context, wolves 'scavenge discarded food,' meaning they search for and gather leftover food."},
+        {"question_text": "Which of the following best expresses the essential information in this sentence from the passage: 'Over many generations, natural selection favored the calmer, less aggressive wolves that tolerated human presence, since they had reliable access to food scraps that more anxious wolves avoided.'", "question_kind": "sentence_simplification", "options": ["Calmer wolves were favored by natural selection because they could reliably access food near humans.", "Anxious wolves were favored because they avoided humans entirely.", "Natural selection had no effect on which wolves survived near humans.", "Wolves competed with humans for food scraps over many generations."], "answer_index": 0, "explanation": "The simplified version keeps the core idea -- calmer wolves survived better through reliable food access -- while dropping secondary detail."},
+        {"question_text": "It can be inferred from the passage that researchers currently", "question_kind": "inference", "options": ["Agree completely on when and where dogs were first domesticated", "Still debate some specific details of dog domestication despite general agreement on the process", "Believe dogs were domesticated more recently than genetic evidence suggests", "Have found no genetic evidence related to domestication"], "answer_index": 1, "explanation": "Genetic evidence 'broadly supports this timeline,' but researchers 'still disagree about precisely where and how many times domestication occurred.'"},
+        {"question_text": "In paragraph 2, what does the word 'their' in 'more attuned to human behavior than their wild ancestors' refer to?", "question_kind": "reference", "options": ["Humans", "Early settlements", "The domesticated animals", "Natural selection"], "answer_index": 2, "explanation": "'Their wild ancestors' refers back to the animals (dogs) being described as more sociable than their wild ancestors (wolves)."}
+      ]
+    }
   ]
 }

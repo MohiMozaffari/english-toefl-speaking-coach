@@ -11,6 +11,7 @@ import type {
   PassageSummary,
   PronunciationContent,
   QuizResult,
+  ReadingResult,
   Recommendation,
   SessionDetailData,
   SessionSummary,
@@ -18,6 +19,7 @@ import type {
   ShadowingProgressRow,
   ShadowingResult,
   ToeflAttemptResponse,
+  ToeflReadingTopics,
   ToeflTopics,
 } from "./types";
 
@@ -90,6 +92,7 @@ export const api = {
   getPronunciationContent: () => get<PronunciationContent>("/api/pronunciation/content"),
   getListeningItems: () => get<ListeningItemSummary[]>("/api/listening/items"),
   getListeningItem: (id: string) => get<ListeningItem>(`/api/listening/items/${id}`),
+  getToeflReadingTopics: () => get<ToeflReadingTopics>("/api/topics/toefl-reading"),
 
   // Practice
   submitGeneralAttempt: (formData: FormData) =>
@@ -101,6 +104,8 @@ export const api = {
   submitLineAttempt: (formData: FormData) => postForm<ShadowingResult>("/api/pronunciation/line-attempt", formData),
   submitListeningQuiz: (itemId: string, answers: (number | null)[]) =>
     postJson<QuizResult>("/api/listening/submit", { item_id: itemId, answers }),
+  submitReadingAttempt: (setId: string, answers: (string | number | null)[]) =>
+    postJson<ReadingResult>("/api/reading/submit", { set_id: setId, answers }),
 
   // Progress & analytics
   getShadowingProgress: () => get<ShadowingProgressRow[]>("/api/shadowing/progress"),

@@ -8,6 +8,7 @@ const NAV = [
     section: "Practice",
     items: [
       { to: "/toefl", icon: "🎓", label: "TOEFL Speaking" },
+      { to: "/reading", icon: "📖", label: "TOEFL Reading" },
       { to: "/general", icon: "🗨️", label: "General English" },
     ],
   },
@@ -38,6 +39,7 @@ const BOTTOM_TABS = [
 ];
 
 const MORE_LINKS = [
+  { to: "/reading", icon: "📖", label: "TOEFL Reading" },
   { to: "/general", icon: "🗨️", label: "General English" },
   { to: "/pronunciation", icon: "👄", label: "Pronunciation Lab" },
   { to: "/listening", icon: "🎧", label: "Listening" },

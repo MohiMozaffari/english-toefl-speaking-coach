@@ -96,6 +96,51 @@ export interface ToeflTopics {
   tips: { listen_repeat: ToeflTaskTips; interview: ToeflTaskTips };
 }
 
+export type ReadingTaskType = "complete_words" | "read_daily_life" | "read_academic";
+
+export interface ReadingBlankItem {
+  blank_id: string;
+  hint: string | null;
+}
+
+export interface ReadingMCItem {
+  question_text: string;
+  options: string[];
+  question_kind?: string;
+}
+
+export interface ReadingSet {
+  set_id: string;
+  task_type: ReadingTaskType;
+  set_title: string;
+  stimulus_kind?: string;
+  passage: string;
+  items: (ReadingBlankItem | ReadingMCItem)[];
+}
+
+export interface ToeflReadingTopics {
+  complete_words: ReadingSet[];
+  read_daily_life: ReadingSet[];
+  read_academic: ReadingSet[];
+}
+
+export interface ReadingResultDetail {
+  blank_id?: string;
+  question_text?: string;
+  given: string | number | null;
+  correct_answer: string | number;
+  correct: boolean;
+  explanation: string;
+}
+
+export interface ReadingResult {
+  set_id: string;
+  task_type: ReadingTaskType;
+  score: number;
+  total: number;
+  detail: ReadingResultDetail[];
+}
+
 export interface AttemptSummary {
   id: number;
   created_at: string;

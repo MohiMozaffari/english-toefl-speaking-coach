@@ -7,6 +7,7 @@ import { LoadingCard } from "./components/ui";
 const Dashboard = lazy(() => import("./pages/Dashboard"));
 const GeneralPractice = lazy(() => import("./pages/GeneralPractice"));
 const ToeflPractice = lazy(() => import("./pages/ToeflPractice"));
+const Reading = lazy(() => import("./pages/Reading"));
 const Shadowing = lazy(() => import("./pages/Shadowing"));
 const PronunciationLab = lazy(() => import("./pages/PronunciationLab"));
 const Listening = lazy(() => import("./pages/Listening"));
@@ -29,6 +30,7 @@ export default function App() {
         {[
           ["/general", GeneralPractice],
           ["/toefl", ToeflPractice],
+          ["/reading", Reading],
           ["/shadowing", Shadowing],
           ["/pronunciation", PronunciationLab],
           ["/listening", Listening],

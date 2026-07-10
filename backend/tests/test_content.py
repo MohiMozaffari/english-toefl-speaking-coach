@@ -1,4 +1,5 @@
 import content
+import database
 import listening_content
 import pronunciation_content
 import shadowing_content
@@ -68,6 +69,74 @@ def test_get_random_toefl_prompt_returns_a_valid_set():
 
 def test_get_random_toefl_prompt_unknown_task_type_returns_none():
     assert content.get_random_toefl_prompt("bogus_task_type") is None
+
+
+def test_toefl_reading_sets_have_correct_item_counts():
+    for s in database.fetch_reading_sets("complete_words"):
+        assert len(s["items"]) == 10, s["set_id"]
+    for s in database.fetch_reading_sets("read_daily_life"):
+        assert 2 <= len(s["items"]) <= 3, s["set_id"]
+    for s in database.fetch_reading_sets("read_academic"):
+        assert len(s["items"]) == 5, s["set_id"]
+
+
+def test_toefl_reading_set_ids_are_unique():
+    ids = [s["set_id"] for t in database.READING_TASK_TYPES for s in database.fetch_reading_sets(t)]
+    assert len(ids) == len(set(ids)), "reading set ids must be unique"
+
+
+def test_toefl_reading_mc_answer_indices_within_range():
+    for task_type in ("read_daily_life", "read_academic"):
+        for s in database.fetch_reading_sets(task_type):
+            for item in s["items"]:
+                assert 0 <= item["answer_index"] < len(item["options"]), f"{s['set_id']}: {item['question_text']}"
+
+
+def test_toefl_reading_complete_words_blanks_appear_in_passage():
+    for s in database.fetch_reading_sets("complete_words"):
+        for item in s["items"]:
+            assert f"{{{{{item['blank_id']}}}}}" in s["passage"], f"{s['set_id']}: missing {item['blank_id']} placeholder"
+            assert item["answer"].strip()
+
+
+def test_toefl_reading_hides_answers_for_practice():
+    for task_type, sets in content.get_toefl_reading().items():
+        for s in sets:
+            for item in s["items"]:
+                assert "answer" not in item
+                assert "answer_index" not in item
+                assert "explanation" not in item
+
+
+def test_toefl_reading_grade_scores_correctly():
+    s = database.fetch_reading_set("rd_daily_02")
+    correct_answers = [item["answer_index"] for item in s["items"]]
+    result = content.grade_toefl_reading("rd_daily_02", correct_answers)
+    assert result["score"] == result["total"] == len(s["items"])
+    assert all(d["correct"] for d in result["detail"])
+
+
+def test_toefl_reading_grade_complete_words_is_case_insensitive():
+    s = database.fetch_reading_set("rd_complete_01")
+    answers = [item["answer"].upper() for item in s["items"]]
+    result = content.grade_toefl_reading("rd_complete_01", answers)
+    assert result["score"] == result["total"]
+
+
+def test_toefl_reading_grade_wrong_and_missing_answers():
+    s = database.fetch_reading_set("rd_academic_01")
+    wrong = [-1] * len(s["items"])
+    result = content.grade_toefl_reading("rd_academic_01", wrong)
+    assert result["score"] == 0
+
+    result_short = content.grade_toefl_reading("rd_academic_01", [])
+    assert result_short["score"] == 0
+    assert result_short["total"] == len(s["items"])
+
+
+def test_toefl_reading_unknown_set_returns_none():
+    assert content.grade_toefl_reading("nonexistent", []) is None
+    assert content.find_toefl_reading_set("nonexistent") is None
 
 
 def test_shadowing_passages_have_no_empty_sentences():

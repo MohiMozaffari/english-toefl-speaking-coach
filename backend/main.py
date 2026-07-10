@@ -103,6 +103,11 @@ def toefl_topics():
     }
 
 
+@app.get("/api/topics/toefl-reading")
+def toefl_reading_topics():
+    return content.get_toefl_reading()
+
+
 @app.get("/api/shadowing/passages")
 def shadowing_passages():
     return shadowing_content.get_passages()
@@ -508,6 +513,29 @@ def listening_submit(payload: dict):
 def get_listening_history(profile_id: int | None = None):
     pid = _resolve_profile(profile_id)
     return db.listening_history(pid)
+
+
+# --- TOEFL Reading ---------------------------------------------------------------
+
+
+@app.post("/api/reading/submit")
+def reading_submit(payload: dict):
+    set_id = payload.get("set_id")
+    answers = payload.get("answers") or []
+    pid = _resolve_profile(payload.get("profile_id"))
+    result = content.grade_toefl_reading(set_id, answers)
+    if result is None:
+        raise AppError("Reading set not found.", code="not_found", status_code=404)
+    db.insert_reading_result(pid, set_id, result["task_type"], result["score"], result["total"], answers)
+    bonus = result["score"] * 2
+    db.insert_activity(pid, "reading_practice", gamification.xp_for("reading_practice", bonus), ref=set_id)
+    return result
+
+
+@app.get("/api/reading/history")
+def get_reading_history(profile_id: int | None = None):
+    pid = _resolve_profile(profile_id)
+    return db.reading_history(pid)
 
 
 # --- History & analytics -----------------------------------------------------

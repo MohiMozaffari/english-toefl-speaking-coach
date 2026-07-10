@@ -83,3 +83,67 @@ def find_toefl_prompt(task_type: str, prompt_id: str) -> dict | None:
 
 def get_random_toefl_prompt(task_type: str) -> dict | None:
     return database.get_random_toefl_prompt(task_type)
+
+
+# --- TOEFL Reading content (SQLite-backed) ------------------------------------
+# Three auto-scored tasks from the redesigned Reading section: Complete the
+# Words (fill in 10 partially-deleted words), Read in Daily Life (2-3 MC
+# questions on a short everyday text), Read an Academic Passage (5 MC
+# questions on a ~200-word passage). Answers are stripped for practice
+# content and only used server-side by grade_toefl_reading.
+
+
+def _hide_reading_answers(s: dict) -> dict:
+    task_type = s["task_type"]
+    items = []
+    for item in s["items"]:
+        if task_type == "complete_words":
+            items.append({"blank_id": item["blank_id"], "hint": item.get("hint")})
+        else:
+            hidden = {"question_text": item["question_text"], "options": item["options"]}
+            if "question_kind" in item:
+                hidden["question_kind"] = item["question_kind"]
+            items.append(hidden)
+    return {**s, "items": items}
+
+
+def get_toefl_reading(task_type: str | None = None) -> dict:
+    types = (task_type,) if task_type else database.READING_TASK_TYPES
+    return {t: [_hide_reading_answers(s) for s in database.fetch_reading_sets(t)] for t in types}
+
+
+def find_toefl_reading_set(set_id: str) -> dict | None:
+    s = database.fetch_reading_set(set_id)
+    return _hide_reading_answers(s) if s else None
+
+
+def grade_toefl_reading(set_id: str, answers: list) -> dict | None:
+    s = database.fetch_reading_set(set_id)
+    if not s:
+        return None
+    task_type = s["task_type"]
+    items = s["items"]
+    detail = []
+    score = 0
+    for i, item in enumerate(items):
+        given = answers[i] if i < len(answers) else None
+        if task_type == "complete_words":
+            correct = isinstance(given, str) and given.strip().lower() == item["answer"].strip().lower()
+            detail.append({
+                "blank_id": item["blank_id"],
+                "given": given,
+                "correct_answer": item["answer"],
+                "correct": correct,
+                "explanation": item["explanation"],
+            })
+        else:
+            correct = given == item["answer_index"]
+            detail.append({
+                "question_text": item["question_text"],
+                "given": given,
+                "correct_answer": item["answer_index"],
+                "correct": correct,
+                "explanation": item["explanation"],
+            })
+        score += 1 if correct else 0
+    return {"set_id": set_id, "task_type": task_type, "score": score, "total": len(items), "detail": detail}

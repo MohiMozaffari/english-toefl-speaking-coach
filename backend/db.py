@@ -123,6 +123,20 @@ def init_db():
         )
         conn.execute(
             """
+            CREATE TABLE IF NOT EXISTS reading_results (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                profile_id INTEGER NOT NULL,
+                created_at TEXT NOT NULL,
+                set_id TEXT NOT NULL,
+                task_type TEXT NOT NULL,
+                score INTEGER NOT NULL,
+                total INTEGER NOT NULL,
+                answers_json TEXT
+            )
+            """
+        )
+        conn.execute(
+            """
             CREATE TABLE IF NOT EXISTS earned_achievements (
                 profile_id INTEGER NOT NULL,
                 achievement_id TEXT NOT NULL,
@@ -437,6 +451,28 @@ def listening_history(profile_id: int, limit=50):
             dict(r)
             for r in conn.execute(
                 "SELECT created_at, item_id, score, total FROM listening_results WHERE profile_id = ? "
+                "ORDER BY id DESC LIMIT ?",
+                (profile_id, limit),
+            )
+        ]
+
+
+def insert_reading_result(profile_id, set_id, task_type, score, total, answers):
+    with _lock, _connect() as conn:
+        conn.execute(
+            "INSERT INTO reading_results (profile_id, created_at, set_id, task_type, score, total, answers_json) "
+            "VALUES (?, ?, ?, ?, ?, ?, ?)",
+            (profile_id, _now(), set_id, task_type, score, total, json.dumps(answers)),
+        )
+        conn.commit()
+
+
+def reading_history(profile_id: int, limit=50):
+    with _lock, _connect() as conn:
+        return [
+            dict(r)
+            for r in conn.execute(
+                "SELECT created_at, set_id, task_type, score, total FROM reading_results WHERE profile_id = ? "
                 "ORDER BY id DESC LIMIT ?",
                 (profile_id, limit),
             )
