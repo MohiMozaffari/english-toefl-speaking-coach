@@ -901,5 +901,132 @@
         {"question_text": "In paragraph 2, what does the word 'their' in 'more attuned to human behavior than their wild ancestors' refer to?", "question_kind": "reference", "options": ["Humans", "Early settlements", "The domesticated animals", "Natural selection"], "answer_index": 2, "explanation": "'Their wild ancestors' refers back to the animals (dogs) being described as more sociable than their wild ancestors (wolves)."}
       ]
     }
+  ],
+
+  "toefl_writing": [
+    {"id": "wr_build_01", "task_type": "build_sentence", "context_line": "The professor said our essays are due by Friday at noon.", "words": ["them?", "already", "print", "or", "them", "email", "we", "Should"], "answer": ["Should", "we", "email", "them", "or", "print", "them?"], "explanation": "A polite yes/no question asking which submission method to use, following naturally from the professor's deadline statement. 'already' is an extra word not used."},
+    {"id": "wr_build_02", "task_type": "build_sentence", "context_line": "I'm not sure if the campus shuttle runs on weekends.", "words": ["weekdays.", "maybe", "on", "runs", "only", "it", "think", "I"], "answer": ["I", "think", "it", "only", "runs", "on", "weekdays."], "explanation": "A hedged statement ('I think') giving a likely answer to the uncertainty raised in the first line. 'maybe' is an extra word not used."},
+    {"id": "wr_build_03", "task_type": "build_sentence", "context_line": "Are you going to the study group tonight?", "words": ["assignment.", "already", "my", "finish", "I", "if", "will", "I"], "answer": ["I", "will", "if", "I", "finish", "my", "assignment."], "explanation": "A conditional response: attendance depends on finishing the assignment first. 'already' is an extra word not used."},
+    {"id": "wr_build_04", "task_type": "build_sentence", "context_line": "Didn't you say the bookstore was having a sale this week?", "words": ["afternoon.", "tomorrow", "ends", "it", "but", "Yes,"], "answer": ["Yes,", "but", "it", "ends", "tomorrow", "afternoon."], "explanation": "Confirms the sale ('Yes,') while adding a contrasting detail about its deadline ('but it ends...')."},
+    {"id": "wr_build_05", "task_type": "build_sentence", "context_line": "I can't find my student ID card anywhere.", "words": ["security.", "quickly", "campus", "to", "it", "report", "should", "You"], "answer": ["You", "should", "report", "it", "to", "campus", "security."], "explanation": "Practical advice using 'should' to recommend an action in response to the problem. 'quickly' is an extra word not used."},
+    {"id": "wr_build_06", "task_type": "build_sentence", "context_line": "The Wi-Fi in the library has been really slow lately.", "words": ["desk.", "IT", "the", "ask", "should", "we", "Maybe"], "answer": ["Maybe", "we", "should", "ask", "the", "IT", "desk."], "explanation": "A softened suggestion ('Maybe we should') proposing a next step in response to the complaint."},
+    {"id": "wr_build_07", "task_type": "build_sentence", "context_line": "I heard the guest lecture got moved to a bigger room.", "words": ["held?", "actually", "being", "it's", "where", "know", "you", "Do"], "answer": ["Do", "you", "know", "where", "it's", "being", "held?"], "explanation": "A natural follow-up question asking for the missing detail (the new room). 'actually' is an extra word not used."},
+    {"id": "wr_build_08", "task_type": "build_sentence", "context_line": "My roommate wants to switch to a different meal plan.", "words": ["idea.", "good", "really", "a", "like", "sounds", "That"], "answer": ["That", "sounds", "like", "a", "really", "good", "idea."], "explanation": "An agreement statement using the common pattern 'That sounds like...' to react positively to the news."},
+    {"id": "wr_build_09", "task_type": "build_sentence", "context_line": "The advisor's office said walk-ins are only allowed on Tuesdays.", "words": ["instead.", "maybe", "appointment", "an", "book", "just", "I'll"], "answer": ["I'll", "just", "book", "an", "appointment", "instead."], "explanation": "A decision statement ('I'll just...') offering a practical alternative given the walk-in restriction. 'maybe' is an extra word not used."},
+    {"id": "wr_build_10", "task_type": "build_sentence", "context_line": "I can't believe how expensive the new textbook is.", "words": ["left?", "copies", "any", "have", "library", "the", "Did"], "answer": ["Did", "the", "library", "have", "any", "copies", "left?"], "explanation": "A practical question suggesting a cheaper alternative (checking the library) in response to the complaint about cost."},
+    {
+      "id": "wr_email_01",
+      "task_type": "write_email",
+      "situation": "You are on the volunteer committee for a campus charity fun run. A new student, Marco, emailed the committee asking how he could get involved.",
+      "email_prompt": "Write an email to Marco. In your email, do the following:\n- Explain what the fun run is and when it takes place.\n- Describe one specific way he could help (for example, the registration table, route marshaling, or event setup).\n- Encourage him to sign up and tell him how.\nWrite as much as you can and in complete sentences.",
+      "min_words": 90,
+      "rubric_ref": "write_email"
+    },
+    {
+      "id": "wr_email_02",
+      "task_type": "write_email",
+      "situation": "Your study group's regular meeting room is being renovated starting next week. You need to suggest a new place to meet to your groupmate, Dana.",
+      "email_prompt": "Write an email to Dana. In your email, do the following:\n- Explain the problem with the current meeting room.\n- Suggest a specific alternative location and time.\n- Ask whether the new plan works for her.\nWrite as much as you can and in complete sentences.",
+      "min_words": 90,
+      "rubric_ref": "write_email"
+    },
+    {
+      "id": "wr_email_03",
+      "task_type": "write_email",
+      "situation": "You noticed that a professor's syllabus for a class you both are interested in lists no prerequisites, but your friend Alex is nervous the class might be too advanced for a beginner.",
+      "email_prompt": "Write an email to Alex. In your email, do the following:\n- Reassure Alex about taking the class.\n- Give a specific reason why you think it would be manageable.\n- Suggest one thing you could both do together to prepare.\nWrite as much as you can and in complete sentences.",
+      "min_words": 90,
+      "rubric_ref": "write_email"
+    },
+    {
+      "id": "wr_email_04",
+      "task_type": "write_email",
+      "situation": "Your dorm's laundry machines have been broken for two weeks. You want to report the issue to the housing office contact, Ms. Chen, and request a fix.",
+      "email_prompt": "Write an email to Ms. Chen. In your email, do the following:\n- Describe the problem with the laundry machines and how long it has been going on.\n- Explain how the problem is affecting you and your dormmates.\n- Request a specific action or timeline for a fix.\nWrite as much as you can and in complete sentences.",
+      "min_words": 90,
+      "rubric_ref": "write_email"
+    },
+    {
+      "id": "wr_email_05",
+      "task_type": "write_email",
+      "situation": "You borrowed detailed lecture notes from a classmate, Priya, before an exam, and they helped you a lot. You want to thank her and offer to return the favor.",
+      "email_prompt": "Write an email to Priya. In your email, do the following:\n- Thank her for lending you the notes.\n- Mention one specific way the notes helped you on the exam.\n- Offer to help her with something in return.\nWrite as much as you can and in complete sentences.",
+      "min_words": 90,
+      "rubric_ref": "write_email"
+    },
+    {
+      "id": "wr_email_06",
+      "task_type": "write_email",
+      "situation": "A new international student, Yuki, emailed the campus newcomers' club asking for tips on adjusting to campus life. You are a club officer replying.",
+      "email_prompt": "Write an email to Yuki. In your email, do the following:\n- Give two or three specific pieces of practical advice for adjusting to campus life.\n- Mention one resource or place on campus that helped you personally.\n- Invite her to an upcoming club event.\nWrite as much as you can and in complete sentences.",
+      "min_words": 90,
+      "rubric_ref": "write_email"
+    },
+    {
+      "id": "wr_discussion_01",
+      "task_type": "academic_discussion",
+      "professor_prompt": "Your discussion topic this week: should universities require every student to take at least one course outside their major field? Post your view and support it with reasons.",
+      "classmate_posts": [
+        {"name": "Jordan", "text": "I think outside courses are great. My required art history class completely changed how I think about design in my own engineering projects. You never know what will end up being useful."},
+        {"name": "Priya", "text": "I disagree. My schedule is already packed with major requirements, and an unrelated course just means less time for the classes that actually prepare me for my career."}
+      ],
+      "min_words": 100,
+      "rubric_ref": "academic_discussion"
+    },
+    {
+      "id": "wr_discussion_02",
+      "task_type": "academic_discussion",
+      "professor_prompt": "Your discussion topic this week: is it better for students to work part-time jobs during their studies, or to focus solely on academics? Share your opinion and explain your reasoning.",
+      "classmate_posts": [
+        {"name": "Marcus", "text": "I work about 15 hours a week at a campus cafe, and honestly it taught me time management skills that my classes never did. I get more done in less time now because I have to."},
+        {"name": "Elena", "text": "I tried working during my first semester and my grades dropped noticeably. I think students should focus on academics first and get work experience through internships later, when the pressure is different."}
+      ],
+      "min_words": 100,
+      "rubric_ref": "academic_discussion"
+    },
+    {
+      "id": "wr_discussion_03",
+      "task_type": "academic_discussion",
+      "professor_prompt": "Your discussion topic this week: should classroom attendance be mandatory, or should students be free to skip class as long as they still pass the exams? Give your view.",
+      "classmate_posts": [
+        {"name": "Diego", "text": "I don't think attendance should be forced. I learn better from reading and recorded lectures at my own pace, and mandatory attendance just penalizes people whose learning style is different."},
+        {"name": "Hana", "text": "I actually think attendance matters more than people admit. In-class discussions bring up points that never make it into the textbook, and skipping class means missing that entirely."}
+      ],
+      "min_words": 100,
+      "rubric_ref": "academic_discussion"
+    },
+    {
+      "id": "wr_discussion_04",
+      "task_type": "academic_discussion",
+      "professor_prompt": "Your discussion topic this week: do group projects prepare students better for the workplace than individual assignments do? Explain your position.",
+      "classmate_posts": [
+        {"name": "Tyler", "text": "Group projects are supposed to build teamwork skills, but in my experience one or two people always end up doing most of the work. I don't think that reflects real workplace collaboration."},
+        {"name": "Aisha", "text": "I've had the opposite experience. My best group projects taught me how to divide tasks, negotiate deadlines, and handle disagreements, which are exactly the skills my internship supervisor said mattered most."}
+      ],
+      "min_words": 100,
+      "rubric_ref": "academic_discussion"
+    },
+    {
+      "id": "wr_discussion_05",
+      "task_type": "academic_discussion",
+      "professor_prompt": "Your discussion topic this week: should universities ban laptops and phones during lectures to improve focus? Share your view and support it.",
+      "classmate_posts": [
+        {"name": "Noah", "text": "I use my laptop to take notes far faster than I can by hand, and I can search past notes instantly before exams. Banning devices would actually hurt students like me."},
+        {"name": "Sofia", "text": "I switched to handwritten notes last semester after noticing how often I got distracted by messages, and I remember the material so much better now. I think the distraction cost outweighs the convenience."}
+      ],
+      "min_words": 100,
+      "rubric_ref": "academic_discussion"
+    },
+    {
+      "id": "wr_discussion_06",
+      "task_type": "academic_discussion",
+      "professor_prompt": "Your discussion topic this week: is it more valuable for students to specialize deeply in one subject, or to gain broad knowledge across many subjects? Give your opinion.",
+      "classmate_posts": [
+        {"name": "Liam", "text": "Specializing is what actually gets you hired. Employers in my field want deep, specific expertise, not a general overview of ten different subjects that barely scratches the surface of any of them."},
+        {"name": "Grace", "text": "I'd push back on that. The most interesting solutions I've seen in my classes came from people connecting ideas across different fields, something a narrow specialist would never think to try."}
+      ],
+      "min_words": 100,
+      "rubric_ref": "academic_discussion"
+    }
   ]
 }

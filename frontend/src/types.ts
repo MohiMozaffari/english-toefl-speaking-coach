@@ -141,6 +141,78 @@ export interface ReadingResult {
   detail: ReadingResultDetail[];
 }
 
+export type WritingTaskType = "build_sentence" | "write_email" | "academic_discussion";
+
+export interface BuildSentenceItem {
+  id: string;
+  task_type: "build_sentence";
+  context_line: string;
+  words: string[];
+}
+
+export interface WriteEmailItem {
+  id: string;
+  task_type: "write_email";
+  situation: string;
+  email_prompt: string;
+  min_words: number;
+  rubric_ref: string;
+}
+
+export interface AcademicDiscussionItem {
+  id: string;
+  task_type: "academic_discussion";
+  professor_prompt: string;
+  classmate_posts: { name: string; text: string }[];
+  min_words: number;
+  rubric_ref: string;
+}
+
+export interface ToeflWritingTopics {
+  build_sentence: BuildSentenceItem[];
+  write_email: WriteEmailItem[];
+  academic_discussion: AcademicDiscussionItem[];
+}
+
+export interface BuildSentenceResult {
+  item_id: string;
+  correct: boolean;
+  given: string[];
+  answer: string[];
+  explanation: string;
+}
+
+export interface WritingCategoryScores {
+  task_achievement?: number;
+  language_use?: number;
+  organization?: number;
+}
+
+export interface WritingFeedback {
+  status?: string;
+  message?: string;
+  score_band: number;
+  score_reason: string;
+  what_went_well: string;
+  biggest_weakness: string;
+  task_achievement: string;
+  language_use: string;
+  organization: string;
+  how_to_improve: string;
+  suggested_exercises?: string[];
+  focus_next: string;
+  model_answer: string;
+  category_scores?: WritingCategoryScores;
+}
+
+export interface WritingAttemptResponse {
+  session_id: number;
+  response_text: string;
+  feedback: WritingFeedback;
+  word_count: number;
+  previous_attempts: AttemptSummary[];
+}
+
 export interface AttemptSummary {
   id: number;
   created_at: string;
@@ -166,7 +238,7 @@ export interface GeneralAttemptResponse {
 export interface SessionSummary {
   id: number;
   created_at: string;
-  mode: "general" | "toefl";
+  mode: "general" | "toefl" | "writing";
   task_type: string;
   task_title: string;
   score_band: number | null;
@@ -176,7 +248,7 @@ export interface SessionSummary {
 export interface SessionDetailData extends SessionSummary {
   task_prompt: string;
   transcript: string;
-  feedback: GeneralFeedback & ToeflFeedback;
+  feedback: GeneralFeedback & ToeflFeedback & WritingFeedback;
   metrics: Metrics | null;
   other_attempts?: AttemptSummary[];
 }

@@ -15,6 +15,8 @@ XP_RULES = {
     "pronunciation_line": 3,
     "listening_quiz": 10,
     "reading_practice": 10,
+    "writing_build_sentence": 10,
+    "writing": 40,
 }
 
 

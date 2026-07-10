@@ -27,11 +27,11 @@ export default function SessionDetail() {
     <div>
       <PageHeader
         title={session.task_title}
-        subtitle={`${new Date(session.created_at).toLocaleString()} · ${mode === "toefl" ? session.task_type : "General English"}`}
+        subtitle={`${new Date(session.created_at).toLocaleString()} · ${mode === "toefl" || mode === "writing" ? session.task_type : "General English"}`}
         actions={
           <>
             <Link to="/history" className="btn">← History</Link>
-            {mode === "toefl" && <ScoreBadge score={session.score_band} />}
+            {(mode === "toefl" || mode === "writing") && <ScoreBadge score={session.score_band} />}
           </>
         }
       />
@@ -80,6 +80,66 @@ export default function SessionDetail() {
             </div>
 
             <p style={{ marginTop: 14 }}><strong>🎯 Tip:</strong> {fb.overall_tip}</p>
+          </>
+        ) : mode === "writing" ? (
+          <>
+            <p className="muted" style={{ marginTop: 20 }}>{fb.score_reason}</p>
+            {(fb.what_went_well || fb.biggest_weakness) && (
+              <div className="grid cols-2" style={{ margin: "10px 0" }}>
+                {fb.what_went_well && (
+                  <div>
+                    <strong>✅ What went well</strong>
+                    <p className="muted small">{fb.what_went_well}</p>
+                  </div>
+                )}
+                {fb.biggest_weakness && (
+                  <div>
+                    <strong>⚠️ Biggest weakness</strong>
+                    <p className="muted small">{fb.biggest_weakness}</p>
+                  </div>
+                )}
+              </div>
+            )}
+            <div className="grid cols-3">
+              <div>
+                <strong>Task achievement</strong>
+                <p className="muted small">{fb.task_achievement}</p>
+              </div>
+              <div>
+                <strong>Language use</strong>
+                <p className="muted small">{fb.language_use}</p>
+              </div>
+              <div>
+                <strong>Organization</strong>
+                <p className="muted small">{fb.organization}</p>
+              </div>
+            </div>
+
+            {fb.model_answer && (
+              <div className="card sub" style={{ marginTop: 14 }}>
+                <div className="flex-between">
+                  <p className="section-title" style={{ margin: 0 }}>🏆 Band-6 model answer</p>
+                  <ReplayButton text={fb.model_answer} />
+                </div>
+                <p className="small" style={{ whiteSpace: "pre-wrap", marginBottom: 0 }}>{fb.model_answer}</p>
+              </div>
+            )}
+
+            {(fb.how_to_improve || fb.suggested_exercises?.length) && (
+              <div className="card sub" style={{ marginTop: 14 }}>
+                <p className="section-title">🧗 How to improve</p>
+                {fb.how_to_improve && <p className="small">{fb.how_to_improve}</p>}
+                {fb.suggested_exercises && (
+                  <ul className="small muted" style={{ margin: "6px 0 0", paddingLeft: 18 }}>
+                    {fb.suggested_exercises.map((e, i) => (
+                      <li key={i}>{e}</li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            )}
+
+            <p style={{ marginTop: 14 }}><strong>🎯 Focus next time:</strong> {fb.focus_next}</p>
           </>
         ) : (
           <>

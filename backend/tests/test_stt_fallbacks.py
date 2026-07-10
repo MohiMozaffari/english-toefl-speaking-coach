@@ -78,3 +78,26 @@ def test_toefl_fallback_feedback_interview_shape():
     assert all(set(item.keys()) == {"question", "said", "better_response", "why"} for item in fb["items"])
     assert "coherence" in fb
     assert "coherence" in fb["category_scores"]
+
+
+def test_writing_fallback_feedback_score_is_within_the_real_1_to_6_scale():
+    fb = llm_service.writing_fallback_feedback(90)
+    assert fb["score_band"] == 1  # the real floor -- never an out-of-scale 0
+
+
+def test_writing_fallback_feedback_shape():
+    fb = llm_service.writing_fallback_feedback(100)
+    assert fb["status"] == "too_short"
+    # Must carry every key the WritingPractice result renderer reads.
+    for key in ("score_reason", "what_went_well", "biggest_weakness", "task_achievement",
+                "language_use", "organization", "how_to_improve", "suggested_exercises",
+                "focus_next", "model_answer"):
+        assert key in fb
+    assert fb["model_answer"] == ""
+    assert set(fb["category_scores"]) == {"task_achievement", "language_use", "organization"}
+    assert all(v == 1 for v in fb["category_scores"].values())
+
+
+def test_writing_fallback_feedback_mentions_the_min_word_count():
+    fb = llm_service.writing_fallback_feedback(90)
+    assert "90" in fb["how_to_improve"]

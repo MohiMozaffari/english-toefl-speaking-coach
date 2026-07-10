@@ -137,6 +137,18 @@ def init_db():
         )
         conn.execute(
             """
+            CREATE TABLE IF NOT EXISTS writing_build_sentence_results (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                profile_id INTEGER NOT NULL,
+                created_at TEXT NOT NULL,
+                item_id TEXT NOT NULL,
+                correct INTEGER NOT NULL,
+                given_json TEXT
+            )
+            """
+        )
+        conn.execute(
+            """
             CREATE TABLE IF NOT EXISTS earned_achievements (
                 profile_id INTEGER NOT NULL,
                 achievement_id TEXT NOT NULL,
@@ -473,6 +485,31 @@ def reading_history(profile_id: int, limit=50):
             dict(r)
             for r in conn.execute(
                 "SELECT created_at, set_id, task_type, score, total FROM reading_results WHERE profile_id = ? "
+                "ORDER BY id DESC LIMIT ?",
+                (profile_id, limit),
+            )
+        ]
+
+
+# --- Writing (Build a Sentence; Write an Email/Academic Discussion use sessions) --
+
+
+def insert_build_sentence_result(profile_id, item_id, correct, given):
+    with _lock, _connect() as conn:
+        conn.execute(
+            "INSERT INTO writing_build_sentence_results (profile_id, created_at, item_id, correct, given_json) "
+            "VALUES (?, ?, ?, ?, ?)",
+            (profile_id, _now(), item_id, 1 if correct else 0, json.dumps(given)),
+        )
+        conn.commit()
+
+
+def build_sentence_history(profile_id: int, limit=50):
+    with _lock, _connect() as conn:
+        return [
+            dict(r)
+            for r in conn.execute(
+                "SELECT created_at, item_id, correct FROM writing_build_sentence_results WHERE profile_id = ? "
                 "ORDER BY id DESC LIMIT ?",
                 (profile_id, limit),
             )

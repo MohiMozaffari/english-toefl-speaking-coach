@@ -139,6 +139,88 @@ def test_toefl_reading_unknown_set_returns_none():
     assert content.find_toefl_reading_set("nonexistent") is None
 
 
+def test_toefl_writing_item_ids_are_unique():
+    ids = [item["id"] for t in database.WRITING_TASK_TYPES for item in database.fetch_writing_items(t)]
+    assert len(ids) == len(set(ids)), "writing item ids must be unique"
+
+
+def test_toefl_writing_build_sentence_meets_minimum_variety():
+    items = database.fetch_writing_items("build_sentence")
+    assert len(items) >= 8
+
+
+def test_toefl_writing_build_sentence_answer_is_subset_of_words():
+    for item in database.fetch_writing_items("build_sentence"):
+        pool = list(item["words"])
+        for token in item["answer"]:
+            assert token in pool, f"{item['id']}: answer token {token!r} not in words"
+            pool.remove(token)
+        assert 3 <= len(item["answer"]) <= 7, f"{item['id']}: answer length out of the 3-7 blank range"
+
+
+def test_toefl_writing_email_and_discussion_meet_minimum_variety():
+    assert len(database.fetch_writing_items("write_email")) >= 4
+    assert len(database.fetch_writing_items("academic_discussion")) >= 4
+
+
+def test_toefl_writing_email_items_have_required_fields():
+    for item in database.fetch_writing_items("write_email"):
+        assert item["situation"].strip()
+        assert item["email_prompt"].strip()
+        assert item["min_words"] > 0
+        assert item["rubric_ref"] == "write_email"
+
+
+def test_toefl_writing_discussion_items_have_two_classmate_posts():
+    for item in database.fetch_writing_items("academic_discussion"):
+        assert item["professor_prompt"].strip()
+        assert len(item["classmate_posts"]) == 2
+        for post in item["classmate_posts"]:
+            assert post["name"] and post["text"]
+        assert item["min_words"] > 0
+        assert item["rubric_ref"] == "academic_discussion"
+
+
+def test_toefl_writing_hides_answer_for_build_sentence_practice():
+    for item in content.get_toefl_writing("build_sentence")["build_sentence"]:
+        assert "answer" not in item
+        assert "explanation" not in item
+        assert "words" in item and "context_line" in item
+
+
+def test_toefl_writing_does_not_hide_fields_for_email_or_discussion():
+    # No single answer key exists for these -- nothing to hide.
+    email = content.get_toefl_writing("write_email")["write_email"][0]
+    assert "email_prompt" in email
+    discussion = content.get_toefl_writing("academic_discussion")["academic_discussion"][0]
+    assert "professor_prompt" in discussion
+
+
+def test_grade_build_sentence_correct_and_incorrect():
+    item = database.fetch_writing_items("build_sentence")[0]
+    correct = content.grade_build_sentence(item["id"], item["answer"])
+    assert correct["correct"] is True
+
+    scrambled = list(reversed(item["answer"]))
+    if scrambled == item["answer"]:  # palindromic order edge case, force a mismatch
+        scrambled = scrambled[1:] + scrambled[:1]
+    wrong = content.grade_build_sentence(item["id"], scrambled)
+    assert wrong["correct"] is False
+    assert wrong["answer"] == item["answer"]
+
+
+def test_grade_build_sentence_unknown_item_returns_none():
+    assert content.grade_build_sentence("nonexistent", []) is None
+
+
+def test_find_toefl_writing_item_roundtrip_and_missing():
+    item = database.fetch_writing_items("write_email")[0]
+    found = content.find_toefl_writing_item(item["id"])
+    assert found is not None
+    assert found["id"] == item["id"]
+    assert content.find_toefl_writing_item("nonexistent") is None
+
+
 def test_shadowing_passages_have_no_empty_sentences():
     for summary in shadowing_content.get_passages():
         passage = shadowing_content.get_passage(summary["id"])

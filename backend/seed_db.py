@@ -39,11 +39,13 @@ def main():
     toefl_set_count = len(data.get("toefl_prompts", []))
     reading_row_count = database.seed_toefl_reading(data.get("toefl_reading", []))
     reading_set_count = len(data.get("toefl_reading", []))
+    writing_count = database.seed_toefl_writing(data.get("toefl_writing", []))
 
     print(f"Seeded database at {database.DB_PATH}")
     print(f"  shadowing_library: {shadowing_count} passages")
     print(f"  toefl_prompts:     {toefl_row_count} rows across {toefl_set_count} sets")
     print(f"  toefl_reading:     {reading_row_count} items across {reading_set_count} sets")
+    print(f"  toefl_writing:     {writing_count} items")
 
 
 if __name__ == "__main__":

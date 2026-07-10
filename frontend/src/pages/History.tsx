@@ -7,7 +7,15 @@ import type { SessionSummary } from "../types";
 const TASK_LABEL: Record<string, string> = {
   listen_repeat: "Listen & Repeat",
   interview: "Interview",
+  write_email: "Write an Email",
+  academic_discussion: "Academic Discussion",
 };
+
+function modeLabel(s: SessionSummary): string {
+  if (s.mode === "toefl") return TASK_LABEL[s.task_type] ?? s.task_type;
+  if (s.mode === "writing") return TASK_LABEL[s.task_type] ?? s.task_type;
+  return "General English";
+}
 
 export default function History() {
   const [filter, setFilter] = useState("all");
@@ -30,9 +38,9 @@ export default function History() {
       <div className="card">
         <div className="flex-between">
           <div className="row">
-            {["all", "toefl", "general"].map((f) => (
+            {["all", "toefl", "writing", "general"].map((f) => (
               <button key={f} type="button" className={`small ${filter === f ? "primary" : ""}`} onClick={() => setFilter(f)}>
-                {f === "all" ? "All" : f === "toefl" ? "TOEFL" : "General"}
+                {f === "all" ? "All" : f === "toefl" ? "Speaking" : f === "writing" ? "Writing" : "General"}
               </button>
             ))}
           </div>
@@ -50,8 +58,7 @@ export default function History() {
                 <div>
                   <div style={{ fontWeight: 600 }}>{s.task_title}</div>
                   <div className="muted small">
-                    {new Date(s.created_at).toLocaleString()} ·{" "}
-                    {s.mode === "toefl" ? TASK_LABEL[s.task_type] ?? s.task_type : "General English"}
+                    {new Date(s.created_at).toLocaleString()} · {modeLabel(s)}
                   </div>
                 </div>
                 <ScoreBadge score={s.score_band} />

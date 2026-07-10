@@ -104,6 +104,83 @@ this schema:
 contain exactly one entry per question, in the same order given."""
 
 
+# Writing tasks from the redesigned TOEFL iBT Writing section. Build a Sentence
+# is auto-scored locally (see content.grade_build_sentence) -- no LLM prompt
+# needed. Write an Email and Write for an Academic Discussion have no single
+# answer key, so they're graded holistically by the LLM against the real ETS
+# scoring criteria (task achievement / elaboration, language variety and
+# accuracy, organization and social conventions), remapped onto this app's
+# uniform 1-6 band scale instead of the official 0-5 email/discussion scale.
+# "model_answer" is a fresh, full-score (band 6) sample response the LLM
+# writes to this exact prompt, not a static template.
+
+WRITE_EMAIL_SYSTEM_PROMPT = """You are an automated TOEFL iBT Writing rater for the "Write an Email" \
+task (2026 redesigned format). The test-taker was given a short campus-life scenario and a list of \
+required points to cover, and had to write an email response.
+
+Score using the official 1-6 automated scale (mapped from the ETS "generally/fully successful" \
+criteria), evaluating: Task achievement (did the response address every required point with real \
+elaboration, not just a brief mention?), Language use (grammar and vocabulary accuracy and variety, \
+appropriate to timed writing), and Organization (clear, logically connected ideas and appropriate \
+social conventions/tone for an email — it does not need separate paragraphs).
+
+A response that ignores a required point, is off-topic, mostly copies the prompt's wording, or is far \
+below the minimum word count should score low regardless of how error-free it is. Minor typos and \
+common slips typical of timed writing (e.g. "alot", "recieve") should NOT by themselves cap the score \
+below 5-6 if the writing is otherwise strong.
+
+Respond with ONLY valid JSON (no markdown code fences, no commentary before or after) matching EXACTLY \
+this schema:
+{
+  "score_band": 1,
+  "score_reason": "one-line reason for the overall score",
+  "what_went_well": "1-2 sentences naming the strongest parts of this response",
+  "biggest_weakness": "the single most score-limiting problem, and WHY it costs points",
+  "task_achievement": "1-2 sentences on whether every required point was addressed and elaborated",
+  "language_use": "1-2 sentences on grammar and vocabulary accuracy and variety",
+  "organization": "1-2 sentences on coherence, flow, and email tone/conventions",
+  "how_to_improve": "2-3 concrete practice steps, phrased as instructions",
+  "suggested_exercises": ["1-3 short exercise suggestions"],
+  "focus_next": "one clear, specific thing to focus on next time",
+  "model_answer": "a complete, natural, band-6 sample email responding to this exact prompt -- real prose, not a template or outline",
+  "category_scores": {"task_achievement": 4, "language_use": 4, "organization": 4}
+}
+"score_band" must be an integer from 1 to 6. "category_scores" values are integers 1-6."""
+
+ACADEMIC_DISCUSSION_SYSTEM_PROMPT = """You are an automated TOEFL iBT Writing rater for the "Write for \
+an Academic Discussion" task (2026 redesigned format). The test-taker was given a professor's discussion \
+question and two classmates' posts, and had to write their own contribution to the discussion.
+
+Score using the official 1-6 automated scale (mapped from the ETS "generally/fully successful" \
+criteria), evaluating: Contribution (a clear, relevant viewpoint that engages with the discussion — \
+agreeing, disagreeing, or extending it with new ideas — without just repeating the posts or the prompt), \
+Language use (grammar and vocabulary accuracy and variety, appropriate to timed writing), and \
+Organization (ideas that are well connected and easy to follow, even without formal paragraphs).
+
+A response that doesn't state a real viewpoint, is off-topic, mostly copies the professor's question or \
+classmates' words, relies on obviously memorized filler phrases, or is far below the minimum word count \
+should score low regardless of grammatical polish. Minor typos and slips typical of timed writing should \
+NOT by themselves cap the score below 5-6 if the contribution is otherwise strong.
+
+Respond with ONLY valid JSON (no markdown code fences, no commentary before or after) matching EXACTLY \
+this schema:
+{
+  "score_band": 1,
+  "score_reason": "one-line reason for the overall score",
+  "what_went_well": "1-2 sentences naming the strongest parts of this response",
+  "biggest_weakness": "the single most score-limiting problem, and WHY it costs points",
+  "task_achievement": "1-2 sentences on whether the response makes a clear, well-supported contribution",
+  "language_use": "1-2 sentences on grammar and vocabulary accuracy and variety",
+  "organization": "1-2 sentences on coherence and flow of ideas",
+  "how_to_improve": "2-3 concrete practice steps, phrased as instructions",
+  "suggested_exercises": ["1-3 short exercise suggestions"],
+  "focus_next": "one clear, specific thing to focus on next time",
+  "model_answer": "a complete, natural, band-6 sample discussion post responding to this exact prompt -- real prose, not a template or outline",
+  "category_scores": {"task_achievement": 4, "language_use": 4, "organization": 4}
+}
+"score_band" must be an integer from 1 to 6. "category_scores" values are integers 1-6."""
+
+
 def _client(config: dict, timeout: float = 90.0) -> OpenAI:
     api_key = config.get("api_key") or "no-key-set"
     base_url = config.get("base_url") or "http://localhost:3001/v1"
@@ -253,6 +330,31 @@ def get_interview_feedback(
     return _clamp_categories(_clamp_score(_extract_json(raw)))
 
 
+def get_write_email_feedback(
+    config: dict, situation: str, email_prompt: str, response_text: str, learner_context: str = ""
+) -> dict:
+    user_prompt = (
+        f"Scenario given to the test-taker:\n{situation}\n\n"
+        f"Task instructions:\n{email_prompt}\n\n"
+        f"Test-taker's email response:\n{response_text}"
+    )
+    raw = _chat(config, _with_context(WRITE_EMAIL_SYSTEM_PROMPT, learner_context), user_prompt)
+    return _clamp_categories(_clamp_score(_extract_json(raw)))
+
+
+def get_academic_discussion_feedback(
+    config: dict, professor_prompt: str, classmate_posts: list, response_text: str, learner_context: str = ""
+) -> dict:
+    posts = "\n".join(f"{p['name']}: {p['text']}" for p in classmate_posts)
+    user_prompt = (
+        f"Professor's discussion question:\n{professor_prompt}\n\n"
+        f"Classmate posts:\n{posts}\n\n"
+        f"Test-taker's contribution:\n{response_text}"
+    )
+    raw = _chat(config, _with_context(ACADEMIC_DISCUSSION_SYSTEM_PROMPT, learner_context), user_prompt)
+    return _clamp_categories(_clamp_score(_extract_json(raw)))
+
+
 def _clamp_score(data: dict) -> dict:
     try:
         data["score_band"] = max(1, min(6, int(data.get("score_band", 1))))
@@ -336,3 +438,32 @@ def toefl_fallback_feedback(status: str, task_type: str, items: list[str]) -> di
         data["coherence"] = message
         data["items"] = [{"question": q, "said": "", "better_response": "", "why": message} for q in items]
     return data
+
+
+# Writing has no "no speech" case (it's typed, not transcribed) -- only "too_short",
+# for a blank or near-blank response. Skips the LLM call: nothing to grade.
+MIN_WRITING_WORDS = 5
+
+
+def writing_fallback_feedback(min_words: int) -> dict:
+    return {
+        "status": "too_short",
+        "message": "Response too short",
+        "score_band": 1,
+        "score_reason": "The response was too short to evaluate.",
+        "what_went_well": "",
+        "biggest_weakness": "Response too short — there was nothing to score.",
+        "task_achievement": "Too short to address the task.",
+        "language_use": "Too short to evaluate.",
+        "organization": "Too short to evaluate.",
+        "how_to_improve": (
+            f"Write at least {min_words} words and cover every required point in the prompt, "
+            "even if some sentences are simple."
+        ),
+        "suggested_exercises": [
+            "Outline the required points first, then write one sentence per point before elaborating.",
+        ],
+        "focus_next": "Write a complete response that covers every required point, then retry.",
+        "model_answer": "",
+        "category_scores": {"task_achievement": 1, "language_use": 1, "organization": 1},
+    }

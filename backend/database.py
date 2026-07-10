@@ -29,6 +29,7 @@ DB_PATH = DATA_DIR / "toefl_coach.db"
 SHADOWING_DIFFICULTIES = ("beginner", "intermediate", "academic")
 TOEFL_TASK_TYPES = ("listen_repeat", "interview")
 READING_TASK_TYPES = ("complete_words", "read_daily_life", "read_academic")
+WRITING_TASK_TYPES = ("build_sentence", "write_email", "academic_discussion")
 
 
 @contextmanager
@@ -104,9 +105,28 @@ def init_db() -> None:
             )
             """
         )
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS writing_items (
+                id TEXT PRIMARY KEY,
+                task_type TEXT NOT NULL,
+                context_line TEXT,
+                words TEXT,
+                answer TEXT,
+                explanation TEXT,
+                situation TEXT,
+                email_prompt TEXT,
+                professor_prompt TEXT,
+                classmate_posts TEXT,
+                min_words INTEGER,
+                rubric_ref TEXT
+            )
+            """
+        )
         conn.execute("CREATE INDEX IF NOT EXISTS idx_shadowing_difficulty ON shadowing_library(difficulty)")
         conn.execute("CREATE INDEX IF NOT EXISTS idx_toefl_set ON toefl_prompts(task_type, set_id, item_index)")
         conn.execute("CREATE INDEX IF NOT EXISTS idx_reading_task_type ON reading_sets(task_type)")
+        conn.execute("CREATE INDEX IF NOT EXISTS idx_writing_task_type ON writing_items(task_type)")
 
 
 # --- Seeding -----------------------------------------------------------------
@@ -218,6 +238,44 @@ def seed_toefl_reading(sets: list[dict]) -> int:
                     )
                 count += 1
     return count
+
+
+def seed_toefl_writing(items: list[dict]) -> int:
+    """INSERT OR REPLACE writing_items rows from parsed seed_data.json entries.
+
+    A single flat table covers all three task types (unlike Speaking/Reading,
+    each Writing item is independent, not part of a set) -- build_sentence uses
+    context_line/words/answer/explanation, write_email uses situation/
+    email_prompt/min_words/rubric_ref, academic_discussion uses
+    professor_prompt/classmate_posts/min_words/rubric_ref.
+    """
+    with get_connection() as conn:
+        for item in items:
+            if item["task_type"] not in WRITING_TASK_TYPES:
+                raise ValueError(f"{item['id']}: task_type must be one of {WRITING_TASK_TYPES}")
+            conn.execute(
+                """
+                INSERT OR REPLACE INTO writing_items
+                    (id, task_type, context_line, words, answer, explanation,
+                     situation, email_prompt, professor_prompt, classmate_posts, min_words, rubric_ref)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """,
+                (
+                    item["id"],
+                    item["task_type"],
+                    item.get("context_line"),
+                    json.dumps(item["words"]) if "words" in item else None,
+                    json.dumps(item["answer"]) if "answer" in item else None,
+                    item.get("explanation"),
+                    item.get("situation"),
+                    item.get("email_prompt"),
+                    item.get("professor_prompt"),
+                    json.dumps(item["classmate_posts"]) if "classmate_posts" in item else None,
+                    item.get("min_words"),
+                    item.get("rubric_ref"),
+                ),
+            )
+    return len(items)
 
 
 # --- Shadowing fetch functions --------------------------------------------------
@@ -383,3 +441,41 @@ def fetch_reading_set(set_id: str) -> dict | None:
             "SELECT * FROM reading_items WHERE set_id = ? ORDER BY item_index", (set_id,)
         ).fetchall()
     return _rows_to_reading_set(set_row, item_rows)
+
+
+# --- TOEFL Writing fetch functions ---------------------------------------------
+
+
+def _row_to_writing_item(row: sqlite3.Row) -> dict:
+    task_type = row["task_type"]
+    item = {"id": row["id"], "task_type": task_type}
+    if task_type == "build_sentence":
+        item["context_line"] = row["context_line"]
+        item["words"] = json.loads(row["words"])
+        item["answer"] = json.loads(row["answer"])
+        item["explanation"] = row["explanation"]
+    elif task_type == "write_email":
+        item["situation"] = row["situation"]
+        item["email_prompt"] = row["email_prompt"]
+        item["min_words"] = row["min_words"]
+        item["rubric_ref"] = row["rubric_ref"]
+    else:  # academic_discussion
+        item["professor_prompt"] = row["professor_prompt"]
+        item["classmate_posts"] = json.loads(row["classmate_posts"])
+        item["min_words"] = row["min_words"]
+        item["rubric_ref"] = row["rubric_ref"]
+    return item
+
+
+def fetch_writing_items(task_type: str) -> list[dict]:
+    with get_connection() as conn:
+        rows = conn.execute(
+            "SELECT * FROM writing_items WHERE task_type = ? ORDER BY id", (task_type,)
+        ).fetchall()
+    return [_row_to_writing_item(r) for r in rows]
+
+
+def fetch_writing_item(item_id: str) -> dict | None:
+    with get_connection() as conn:
+        row = conn.execute("SELECT * FROM writing_items WHERE id = ?", (item_id,)).fetchone()
+    return _row_to_writing_item(row) if row else None

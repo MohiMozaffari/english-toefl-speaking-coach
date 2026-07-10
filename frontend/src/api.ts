@@ -1,4 +1,5 @@
 import type {
+  BuildSentenceResult,
   ContrastStats,
   DashboardData,
   GeneralAttemptResponse,
@@ -21,6 +22,8 @@ import type {
   ToeflAttemptResponse,
   ToeflReadingTopics,
   ToeflTopics,
+  ToeflWritingTopics,
+  WritingAttemptResponse,
 } from "./types";
 
 const BASE_URL = "http://localhost:8001";
@@ -93,6 +96,7 @@ export const api = {
   getListeningItems: () => get<ListeningItemSummary[]>("/api/listening/items"),
   getListeningItem: (id: string) => get<ListeningItem>(`/api/listening/items/${id}`),
   getToeflReadingTopics: () => get<ToeflReadingTopics>("/api/topics/toefl-reading"),
+  getToeflWritingTopics: () => get<ToeflWritingTopics>("/api/topics/toefl-writing"),
 
   // Practice
   submitGeneralAttempt: (formData: FormData) =>
@@ -106,6 +110,10 @@ export const api = {
     postJson<QuizResult>("/api/listening/submit", { item_id: itemId, answers }),
   submitReadingAttempt: (setId: string, answers: (string | number | null)[]) =>
     postJson<ReadingResult>("/api/reading/submit", { set_id: setId, answers }),
+  submitBuildSentence: (itemId: string, tokens: string[]) =>
+    postJson<BuildSentenceResult>("/api/writing/build-sentence/submit", { item_id: itemId, tokens }),
+  submitWritingAttempt: (itemId: string, responseText: string) =>
+    postJson<WritingAttemptResponse>("/api/practice/writing/attempt", { item_id: itemId, response_text: responseText }),
 
   // Progress & analytics
   getShadowingProgress: () => get<ShadowingProgressRow[]>("/api/shadowing/progress"),

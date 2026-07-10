@@ -147,3 +147,40 @@ def grade_toefl_reading(set_id: str, answers: list) -> dict | None:
             })
         score += 1 if correct else 0
     return {"set_id": set_id, "task_type": task_type, "score": score, "total": len(items), "detail": detail}
+
+
+# --- TOEFL Writing content (SQLite-backed) ------------------------------------
+# Three tasks from the redesigned Writing section. Build a Sentence is
+# auto-scored locally (exact word-order match, no partial credit, mirroring
+# the real exam). Write an Email and Write for an Academic Discussion are
+# graded by the LLM against a rubric (see llm_service.py) -- they have no
+# single answer key, so nothing is hidden for them.
+
+
+def get_toefl_writing(task_type: str | None = None) -> dict:
+    types = (task_type,) if task_type else database.WRITING_TASK_TYPES
+    result = {}
+    for t in types:
+        items = database.fetch_writing_items(t)
+        if t == "build_sentence":
+            items = [{k: v for k, v in item.items() if k not in ("answer", "explanation")} for item in items]
+        result[t] = items
+    return result
+
+
+def find_toefl_writing_item(item_id: str) -> dict | None:
+    return database.fetch_writing_item(item_id)
+
+
+def grade_build_sentence(item_id: str, tokens: list) -> dict | None:
+    item = database.fetch_writing_item(item_id)
+    if not item or item["task_type"] != "build_sentence":
+        return None
+    correct = list(tokens) == item["answer"]
+    return {
+        "item_id": item_id,
+        "correct": correct,
+        "given": list(tokens),
+        "answer": item["answer"],
+        "explanation": item["explanation"],
+    }

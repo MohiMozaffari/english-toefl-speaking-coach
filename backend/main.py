@@ -108,6 +108,11 @@ def toefl_reading_topics():
     return content.get_toefl_reading()
 
 
+@app.get("/api/topics/toefl-writing")
+def toefl_writing_topics():
+    return content.get_toefl_writing()
+
+
 @app.get("/api/shadowing/passages")
 def shadowing_passages():
     return shadowing_content.get_passages()
@@ -536,6 +541,88 @@ def reading_submit(payload: dict):
 def get_reading_history(profile_id: int | None = None):
     pid = _resolve_profile(profile_id)
     return db.reading_history(pid)
+
+
+# --- TOEFL Writing ---------------------------------------------------------------
+
+
+@app.post("/api/writing/build-sentence/submit")
+def build_sentence_submit(payload: dict):
+    item_id = payload.get("item_id")
+    tokens = payload.get("tokens") or []
+    pid = _resolve_profile(payload.get("profile_id"))
+    result = content.grade_build_sentence(item_id, tokens)
+    if result is None:
+        raise AppError("Build a Sentence item not found.", code="not_found", status_code=404)
+    db.insert_build_sentence_result(pid, item_id, result["correct"], tokens)
+    bonus = 5 if result["correct"] else 0
+    db.insert_activity(pid, "writing_build_sentence", gamification.xp_for("writing_build_sentence", bonus), ref=item_id)
+    return result
+
+
+@app.get("/api/writing/build-sentence/history")
+def get_build_sentence_history(profile_id: int | None = None):
+    pid = _resolve_profile(profile_id)
+    return db.build_sentence_history(pid)
+
+
+@app.post("/api/practice/writing/attempt")
+def writing_attempt(payload: dict):
+    item_id = payload.get("item_id")
+    response_text = (payload.get("response_text") or "").strip()
+    pid = _resolve_profile(payload.get("profile_id"))
+
+    item = content.find_toefl_writing_item(item_id)
+    if not item or item["task_type"] not in ("write_email", "academic_discussion"):
+        raise AppError("Unknown writing prompt id.", code="bad_prompt_id")
+
+    config = load_config()
+    word_count = len(response_text.split())
+
+    if item["task_type"] == "write_email":
+        task_title = f"Write an Email — {item_id}"
+        task_prompt = item["email_prompt"]
+    else:
+        task_title = f"Academic Discussion — {item_id}"
+        task_prompt = item["professor_prompt"]
+
+    if word_count < llm_service.MIN_WRITING_WORDS:
+        feedback = llm_service.writing_fallback_feedback(item["min_words"])
+    else:
+        learner_context = coach.learner_context_for_llm(pid)
+        if item["task_type"] == "write_email":
+            feedback = llm_service.get_write_email_feedback(
+                config, item["situation"], item["email_prompt"], response_text, learner_context
+            )
+        else:
+            feedback = llm_service.get_academic_discussion_feedback(
+                config, item["professor_prompt"], item["classmate_posts"], response_text, learner_context
+            )
+
+    session_id = db.insert_session(
+        mode="writing",
+        task_type=item["task_type"],
+        task_title=task_title,
+        task_prompt=task_prompt,
+        transcript=response_text,
+        feedback=feedback,
+        score_band=feedback.get("score_band"),
+        metrics={"word_count": word_count},
+        profile_id=pid,
+        prompt_ref=f"writing:{item_id}",
+    )
+    if word_count >= llm_service.MIN_WRITING_WORDS:
+        score_bonus = (feedback.get("score_band") or 0) * 5
+        db.insert_activity(pid, "writing", gamification.xp_for("writing", score_bonus), ref=f"session:{session_id}")
+
+    previous_attempts = db.sessions_for_prompt(f"writing:{item_id}", pid)
+    return {
+        "session_id": session_id,
+        "response_text": response_text,
+        "feedback": feedback,
+        "word_count": word_count,
+        "previous_attempts": previous_attempts,
+    }
 
 
 # --- History & analytics -----------------------------------------------------
