@@ -159,6 +159,94 @@
         "Awareness of the effect alone has been shown to reduce it somewhat.",
         "Simply knowing the pattern exists can make people more likely to step in."
       ]
+    },
+    {
+      "id": "sh_12",
+      "difficulty": "beginner",
+      "topic": "Borrowing a Neighbor's Tool",
+      "preferred_accent": "en-US",
+      "sentences": [
+        "I needed a ladder to clean out my gutters last weekend.",
+        "My neighbor Tom has a whole shed full of tools.",
+        "I knocked on his door and asked if I could borrow one.",
+        "He said sure, as long as I brought it back by Sunday.",
+        "The ladder was heavier than I expected.",
+        "When I returned it, I brought him a few cookies to say thanks."
+      ]
+    },
+    {
+      "id": "sh_13",
+      "difficulty": "beginner",
+      "topic": "A Rainy Day Walk",
+      "preferred_accent": "en-GB",
+      "sentences": [
+        "It started raining just as I left the house.",
+        "I didn't have an umbrella, so I pulled up my hood.",
+        "The streets were almost empty except for a few other walkers.",
+        "Puddles had formed along the sidewalk near the corner shop.",
+        "By the time I got home, my shoes were completely soaked.",
+        "Still, there was something calming about the sound of the rain."
+      ]
+    },
+    {
+      "id": "sh_14",
+      "difficulty": "intermediate",
+      "topic": "Starting a Community Garden",
+      "preferred_accent": "en-US",
+      "sentences": [
+        "A few neighbors decided to turn an empty lot into a garden.",
+        "First, they asked the city for permission to use the space.",
+        "Then they cleared away weeds and old trash left over the years.",
+        "Volunteers built raised beds out of donated wood.",
+        "Each family who joined got a small section to plant.",
+        "By midsummer, the garden was producing tomatoes, herbs, and beans.",
+        "It became a place where people who barely knew each other started talking."
+      ]
+    },
+    {
+      "id": "sh_15",
+      "difficulty": "intermediate",
+      "topic": "Choosing a Career Path",
+      "preferred_accent": "en-AU",
+      "sentences": [
+        "When I finished school, I wasn't sure what career to pursue.",
+        "My parents wanted me to study something practical, like engineering.",
+        "But I felt more drawn to writing and design.",
+        "I decided to take a year to try a few internships.",
+        "One internship at a small design studio really clicked with me.",
+        "It wasn't the safest choice, but it felt like the right one.",
+        "A few years later, I still don't regret following that instinct."
+      ]
+    },
+    {
+      "id": "sh_16",
+      "difficulty": "academic",
+      "topic": "How Advertising Shapes Spending",
+      "preferred_accent": "en-GB",
+      "sentences": [
+        "Advertisers spend enormous amounts of money studying how people make decisions.",
+        "One common technique is creating a sense of urgency around a purchase.",
+        "Phrases like 'limited time only' push shoppers to act before they think it through.",
+        "Another strategy relies on associating a product with a desirable lifestyle.",
+        "Researchers have found that repeated exposure alone increases a brand's perceived trustworthiness.",
+        "Understanding these techniques doesn't make consumers immune to them, but it does make people more cautious.",
+        "Being aware of the pattern is often the first step toward more deliberate spending."
+      ]
+    },
+    {
+      "id": "sh_17",
+      "difficulty": "academic",
+      "topic": "The Psychology of First Impressions",
+      "preferred_accent": "en-US",
+      "sentences": [
+        "Psychologists have found that people form impressions of others within seconds of meeting them.",
+        "These snap judgments are based on facial expressions, posture, and tone of voice.",
+        "Once an impression forms, people tend to notice information that confirms it.",
+        "This means a poor first impression can be surprisingly difficult to reverse.",
+        "Interviewers, for example, often decide how they feel about a candidate before the interview truly begins.",
+        "Some researchers suggest deliberately pausing before judging someone to counter this bias.",
+        "Simply knowing the tendency exists can make people slightly more fair-minded in their evaluations."
+      ]
     }
   ],
 
@@ -224,6 +312,246 @@
       ]
     },
     {
+      "set_id": "lr_05",
+      "task_type": "listen_repeat",
+      "set_title": "Neighborhood Coffee Shop",
+      "picture_caption": "A barista making coffee behind the counter of a small neighborhood cafe",
+      "items": [
+        {"question_text": "The coffee shop opens at seven.", "response_time": 8},
+        {"question_text": "I usually order a latte with oat milk.", "response_time": 8},
+        {"question_text": "The barista knows my order by heart.", "response_time": 10},
+        {"question_text": "There are only a few tables inside.", "response_time": 10},
+        {"question_text": "On weekends, the line goes out the door.", "response_time": 10},
+        {"question_text": "They started selling pastries from a local bakery last month.", "response_time": 12},
+        {"question_text": "If you bring your own cup, you get a small discount on your drink.", "response_time": 12}
+      ]
+    },
+    {
+      "set_id": "lr_06",
+      "task_type": "listen_repeat",
+      "set_title": "Morning Bus Ride",
+      "picture_caption": "Commuters boarding a city bus at a covered bus stop in the morning",
+      "items": [
+        {"question_text": "The bus arrives every ten minutes.", "response_time": 8},
+        {"question_text": "I like to sit near the window.", "response_time": 8},
+        {"question_text": "Most passengers get off downtown.", "response_time": 10},
+        {"question_text": "The driver announces each stop out loud.", "response_time": 10},
+        {"question_text": "Rush hour buses are usually very crowded.", "response_time": 10},
+        {"question_text": "Yesterday the bus was late because of heavy traffic.", "response_time": 12},
+        {"question_text": "If you tap your card twice by mistake, the fare machine will refund you.", "response_time": 12}
+      ]
+    },
+    {
+      "set_id": "lr_07",
+      "task_type": "listen_repeat",
+      "set_title": "University Gym",
+      "picture_caption": "Students exercising on treadmills and weight machines inside a university gym",
+      "items": [
+        {"question_text": "The gym is open until midnight.", "response_time": 8},
+        {"question_text": "You need a student card to enter.", "response_time": 8},
+        {"question_text": "Towels are available near the front desk.", "response_time": 10},
+        {"question_text": "The weight room gets crowded after five.", "response_time": 10},
+        {"question_text": "Personal trainers offer free sessions each semester.", "response_time": 10},
+        {"question_text": "Members can reserve a treadmill up to a day in advance.", "response_time": 12},
+        {"question_text": "The gym recently added a new studio for group fitness classes.", "response_time": 12}
+      ]
+    },
+    {
+      "set_id": "lr_08",
+      "task_type": "listen_repeat",
+      "set_title": "City Public Park",
+      "picture_caption": "Families walking and cycling along a paved path through a city park",
+      "items": [
+        {"question_text": "The park closes at sunset.", "response_time": 8},
+        {"question_text": "Dogs must stay on a leash.", "response_time": 8},
+        {"question_text": "There's a playground near the south entrance.", "response_time": 10},
+        {"question_text": "Joggers often use the trail around the lake.", "response_time": 10},
+        {"question_text": "The city plants new flowers every spring.", "response_time": 10},
+        {"question_text": "On weekends, food trucks park along the main path.", "response_time": 12},
+        {"question_text": "Visitors are asked to clean up after their pets and recycle when possible.", "response_time": 12}
+      ]
+    },
+    {
+      "set_id": "lr_09",
+      "task_type": "listen_repeat",
+      "set_title": "Local Laundromat",
+      "picture_caption": "Rows of washing machines and dryers inside a small neighborhood laundromat",
+      "items": [
+        {"question_text": "The laundromat is open every day.", "response_time": 8},
+        {"question_text": "Machines take coins or a prepaid card.", "response_time": 8},
+        {"question_text": "A large wash cycle takes about forty minutes.", "response_time": 10},
+        {"question_text": "Detergent is sold from a machine near the door.", "response_time": 10},
+        {"question_text": "Most people fold their clothes at the tables in back.", "response_time": 10},
+        {"question_text": "During busy hours, it can be hard to find an empty dryer.", "response_time": 12},
+        {"question_text": "If a machine breaks down, there's a number posted to call for a refund.", "response_time": 12}
+      ]
+    },
+    {
+      "set_id": "lr_10",
+      "task_type": "listen_repeat",
+      "set_title": "Airport Check-in Counter",
+      "picture_caption": "A traveler checking in luggage at an airline counter in a busy airport terminal",
+      "items": [
+        {"question_text": "The check-in counter opens two hours early.", "response_time": 8},
+        {"question_text": "Please have your passport ready.", "response_time": 8},
+        {"question_text": "Each passenger is allowed one carry-on bag.", "response_time": 10},
+        {"question_text": "Oversized luggage must be checked at a separate counter.", "response_time": 10},
+        {"question_text": "Boarding usually begins forty minutes before departure.", "response_time": 10},
+        {"question_text": "Passengers with connecting flights should confirm their gate as soon as they land.", "response_time": 12},
+        {"question_text": "If your flight is delayed, the airline will rebook you on the next available departure.", "response_time": 12}
+      ]
+    },
+    {
+      "set_id": "lr_11",
+      "task_type": "listen_repeat",
+      "set_title": "University Career Fair",
+      "picture_caption": "Students in business attire talking to recruiters at booths inside a large exhibition hall",
+      "items": [
+        {"question_text": "The career fair runs for two full days.", "response_time": 8},
+        {"question_text": "Bring several copies of your resume.", "response_time": 8},
+        {"question_text": "Recruiters from over fifty companies will attend.", "response_time": 10},
+        {"question_text": "Business casual clothing is strongly recommended for attendees.", "response_time": 10},
+        {"question_text": "Some companies schedule short interviews on the spot.", "response_time": 10},
+        {"question_text": "Students are encouraged to research each company before approaching its booth.", "response_time": 12},
+        {"question_text": "Career services will email a full list of participating employers the week before the event.", "response_time": 12}
+      ]
+    },
+    {
+      "set_id": "lr_12",
+      "task_type": "listen_repeat",
+      "set_title": "Apartment Lease Signing",
+      "picture_caption": "A tenant reviewing paperwork with a landlord at a desk before signing a lease",
+      "items": [
+        {"question_text": "The lease begins on the first of the month.", "response_time": 8},
+        {"question_text": "A security deposit is due at signing.", "response_time": 8},
+        {"question_text": "Utilities are not included in the monthly rent.", "response_time": 10},
+        {"question_text": "Tenants must give sixty days' notice before moving out.", "response_time": 10},
+        {"question_text": "Any changes to the apartment require the landlord's approval.", "response_time": 10},
+        {"question_text": "The lease automatically renews unless either party cancels in writing.", "response_time": 12},
+        {"question_text": "Before signing, make sure you understand the policy on subletting and early termination fees.", "response_time": 12}
+      ]
+    },
+    {
+      "set_id": "lr_13",
+      "task_type": "listen_repeat",
+      "set_title": "Grocery Store Checkout",
+      "picture_caption": "A cashier scanning items at a grocery store checkout counter",
+      "items": [
+        {"question_text": "The store closes at ten tonight.", "response_time": 8},
+        {"question_text": "Self-checkout lines move a bit faster.", "response_time": 8},
+        {"question_text": "You can pay with cash, card, or your phone.", "response_time": 10},
+        {"question_text": "Reusable bags are sold near the entrance.", "response_time": 10},
+        {"question_text": "The cashier will ask if you found everything.", "response_time": 10},
+        {"question_text": "If an item doesn't scan, an employee will check the price for you.", "response_time": 12},
+        {"question_text": "Members of the store's loyalty program get extra discounts on fresh produce every week.", "response_time": 12}
+      ]
+    },
+    {
+      "set_id": "lr_14",
+      "task_type": "listen_repeat",
+      "set_title": "Public Library Renewal Desk",
+      "picture_caption": "A librarian helping a patron renew library books at the front desk",
+      "items": [
+        {"question_text": "You can renew books online.", "response_time": 8},
+        {"question_text": "Most items renew for two weeks.", "response_time": 8},
+        {"question_text": "Overdue fines are ten cents a day.", "response_time": 10},
+        {"question_text": "Popular new releases can't be renewed.", "response_time": 10},
+        {"question_text": "The renewal desk is open until closing.", "response_time": 10},
+        {"question_text": "If someone else has requested your book, you can't renew it again.", "response_time": 12},
+        {"question_text": "Library cards must be shown at the desk before any items can be checked out.", "response_time": 12}
+      ]
+    },
+    {
+      "set_id": "lr_15",
+      "task_type": "listen_repeat",
+      "set_title": "University IT Help Desk",
+      "picture_caption": "A student getting help from a technician at a university IT help desk",
+      "items": [
+        {"question_text": "The help desk opens at nine.", "response_time": 8},
+        {"question_text": "Bring your laptop and student ID.", "response_time": 8},
+        {"question_text": "Password resets take about five minutes.", "response_time": 10},
+        {"question_text": "Wi-Fi issues are the most common complaint.", "response_time": 10},
+        {"question_text": "Technicians can also help set up your printer.", "response_time": 10},
+        {"question_text": "If your account gets locked, you'll need to verify your identity first.", "response_time": 12},
+        {"question_text": "The help desk offers same-day repairs for most minor hardware problems on campus.", "response_time": 12}
+      ]
+    },
+    {
+      "set_id": "lr_16",
+      "task_type": "listen_repeat",
+      "set_title": "Hotel Front Desk Check-in",
+      "picture_caption": "A guest checking in at a hotel front desk while the clerk types on a computer",
+      "items": [
+        {"question_text": "Check-in starts at three o'clock.", "response_time": 8},
+        {"question_text": "Please have your reservation number ready.", "response_time": 8},
+        {"question_text": "A valid ID is required at check-in.", "response_time": 10},
+        {"question_text": "Breakfast is served from six to ten.", "response_time": 10},
+        {"question_text": "Late checkout can be arranged for a small fee.", "response_time": 10},
+        {"question_text": "If your room isn't ready yet, you're welcome to wait in the lobby.", "response_time": 12},
+        {"question_text": "Guests who join the rewards program receive a free upgrade on their next stay.", "response_time": 12}
+      ]
+    },
+    {
+      "set_id": "lr_17",
+      "task_type": "listen_repeat",
+      "set_title": "Bike Rental Kiosk",
+      "picture_caption": "A tourist unlocking a rental bike from a docking station kiosk on a city sidewalk",
+      "items": [
+        {"question_text": "The first thirty minutes are free.", "response_time": 8},
+        {"question_text": "Return the bike to any station.", "response_time": 8},
+        {"question_text": "Helmets are available at some locations.", "response_time": 10},
+        {"question_text": "You'll need an app to unlock a bike.", "response_time": 10},
+        {"question_text": "Rates increase after the first hour of use.", "response_time": 10},
+        {"question_text": "If a station is full, the app will show you the nearest one with space.", "response_time": 12},
+        {"question_text": "Riders should check the tires and brakes before starting a longer trip across town.", "response_time": 12}
+      ]
+    },
+    {
+      "set_id": "lr_18",
+      "task_type": "listen_repeat",
+      "set_title": "Passport Renewal Office",
+      "picture_caption": "An applicant handing documents to a clerk at a government passport renewal office",
+      "items": [
+        {"question_text": "Renewals take about six weeks.", "response_time": 8},
+        {"question_text": "Bring your old passport and one photo.", "response_time": 8},
+        {"question_text": "Expedited service costs an additional fee.", "response_time": 10},
+        {"question_text": "Applications can also be started online.", "response_time": 10},
+        {"question_text": "Photos must meet strict size and background rules.", "response_time": 10},
+        {"question_text": "If your passport is damaged, you may need to apply as a first-time applicant.", "response_time": 12},
+        {"question_text": "Travelers with an international trip in the next two weeks should request emergency processing immediately.", "response_time": 12}
+      ]
+    },
+    {
+      "set_id": "lr_19",
+      "task_type": "listen_repeat",
+      "set_title": "Car Rental Counter",
+      "picture_caption": "A traveler signing paperwork at a car rental counter while an agent explains the contract",
+      "items": [
+        {"question_text": "Rentals require a valid license.", "response_time": 8},
+        {"question_text": "A credit card is needed as a deposit.", "response_time": 8},
+        {"question_text": "Insurance coverage is optional but recommended.", "response_time": 10},
+        {"question_text": "Fuel should be topped off before you return the car.", "response_time": 10},
+        {"question_text": "Additional drivers must be added at the counter.", "response_time": 10},
+        {"question_text": "If you return the car late, you may be charged for an extra full day.", "response_time": 12},
+        {"question_text": "Customers who reserve a car online in advance usually receive a lower daily rate than walk-ins.", "response_time": 12}
+      ]
+    },
+    {
+      "set_id": "lr_20",
+      "task_type": "listen_repeat",
+      "set_title": "Bank Account Opening",
+      "picture_caption": "A new customer signing forms with a bank representative to open a checking account",
+      "items": [
+        {"question_text": "New accounts need two forms of ID.", "response_time": 8},
+        {"question_text": "There's no minimum deposit required.", "response_time": 8},
+        {"question_text": "Online banking is set up the same day.", "response_time": 10},
+        {"question_text": "A debit card arrives within a week by mail.", "response_time": 10},
+        {"question_text": "Monthly fees are waived for students.", "response_time": 10},
+        {"question_text": "If you overdraw your account, a small fee will be applied automatically.", "response_time": 12},
+        {"question_text": "Customers who set up direct deposit within the first month qualify for a one-time bonus.", "response_time": 12}
+      ]
+    },
+    {
       "set_id": "iv_01",
       "task_type": "interview",
       "set_title": "Free Time and Hobbies",
@@ -265,6 +593,182 @@
         {"question_text": "What is a meal you often make or order?", "response_time": 45},
         {"question_text": "Would you rather eat at a restaurant or cook at home? Why?", "response_time": 45},
         {"question_text": "Tell me about a memorable meal you had recently.", "response_time": 45}
+      ]
+    },
+    {
+      "set_id": "iv_05",
+      "task_type": "interview",
+      "set_title": "Technology and Daily Life",
+      "items": [
+        {"question_text": "How often do you use your phone in a typical day?", "response_time": 45},
+        {"question_text": "What's one app or piece of technology you couldn't live without? Why?", "response_time": 45},
+        {"question_text": "Some people think technology makes life easier, while others think it makes life more stressful. What do you think?", "response_time": 45},
+        {"question_text": "If you had to go a full week without your phone, how do you think you would manage?", "response_time": 45}
+      ]
+    },
+    {
+      "set_id": "iv_06",
+      "task_type": "interview",
+      "set_title": "Music and Entertainment",
+      "items": [
+        {"question_text": "What kind of music do you usually listen to?", "response_time": 45},
+        {"question_text": "Do you prefer listening to music alone or going to live concerts? Why?", "response_time": 45},
+        {"question_text": "Some people believe music can affect a person's mood. Do you agree?", "response_time": 45},
+        {"question_text": "If you could learn to play any instrument, which one would you choose and why?", "response_time": 45}
+      ]
+    },
+    {
+      "set_id": "iv_07",
+      "task_type": "interview",
+      "set_title": "Health and Exercise",
+      "items": [
+        {"question_text": "How do you usually stay active during the week?", "response_time": 45},
+        {"question_text": "Do you prefer exercising alone or with a friend? Why?", "response_time": 45},
+        {"question_text": "Some people say eating well is more important than exercising. What's your opinion?", "response_time": 45},
+        {"question_text": "If you had more free time, what new healthy habit would you try?", "response_time": 45}
+      ]
+    },
+    {
+      "set_id": "iv_08",
+      "task_type": "interview",
+      "set_title": "Shopping Habits",
+      "items": [
+        {"question_text": "Do you prefer shopping in stores or online? Why?", "response_time": 45},
+        {"question_text": "How do you usually decide whether to buy something you want?", "response_time": 45},
+        {"question_text": "Some people think sales and discounts make people spend more money, not less. What do you think?", "response_time": 45},
+        {"question_text": "If you had to give up shopping for a whole month, how difficult would that be for you?", "response_time": 45}
+      ]
+    },
+    {
+      "set_id": "iv_09",
+      "task_type": "interview",
+      "set_title": "Environment and Nature",
+      "items": [
+        {"question_text": "How much time do you usually spend outdoors?", "response_time": 45},
+        {"question_text": "What's your favorite type of natural environment, like a beach, forest, or mountains? Why?", "response_time": 45},
+        {"question_text": "Some people think individuals can't do much to help the environment. Do you agree or disagree?", "response_time": 45},
+        {"question_text": "If you could change one thing about how your city handles the environment, what would it be?", "response_time": 45}
+      ]
+    },
+    {
+      "set_id": "iv_10",
+      "task_type": "interview",
+      "set_title": "Family and Relationships",
+      "items": [
+        {"question_text": "How often do you spend time with your family?", "response_time": 45},
+        {"question_text": "Who in your family are you closest to, and why?", "response_time": 45},
+        {"question_text": "Some people think it's important to live near family, while others prefer to live far away. What's your view?", "response_time": 45},
+        {"question_text": "If you could plan a perfect day with your family, what would you do together?", "response_time": 45}
+      ]
+    },
+    {
+      "set_id": "iv_11",
+      "task_type": "interview",
+      "set_title": "Work and Careers",
+      "items": [
+        {"question_text": "What do you like most about your current job or field of study?", "response_time": 45},
+        {"question_text": "Would you rather work in a large company or a small one? Why?", "response_time": 45},
+        {"question_text": "Some people think a high salary is more important than enjoying your job. What do you think?", "response_time": 45},
+        {"question_text": "If you could switch careers right now, what would you choose to do instead?", "response_time": 45}
+      ]
+    },
+    {
+      "set_id": "iv_12",
+      "task_type": "interview",
+      "set_title": "Books and Reading",
+      "items": [
+        {"question_text": "Do you enjoy reading? What kinds of books do you like?", "response_time": 45},
+        {"question_text": "Do you prefer reading physical books or e-books? Why?", "response_time": 45},
+        {"question_text": "Some people think reading fiction is a waste of time compared to nonfiction. Do you agree?", "response_time": 45},
+        {"question_text": "If you could meet any author, living or dead, who would it be and what would you ask them?", "response_time": 45}
+      ]
+    },
+    {
+      "set_id": "iv_13",
+      "task_type": "interview",
+      "set_title": "Language Learning",
+      "items": [
+        {"question_text": "How many languages do you speak, and how did you learn them?", "response_time": 45},
+        {"question_text": "What's the most difficult part of learning a new language for you?", "response_time": 45},
+        {"question_text": "Some people think living in a country is the best way to learn its language. Do you agree?", "response_time": 45},
+        {"question_text": "If you could become fluent in any language overnight, which one would you choose and why?", "response_time": 45}
+      ]
+    },
+    {
+      "set_id": "iv_14",
+      "task_type": "interview",
+      "set_title": "Volunteering and Community",
+      "items": [
+        {"question_text": "Have you ever volunteered for a cause or organization? What did you do?", "response_time": 45},
+        {"question_text": "What kind of community work interests you most?", "response_time": 45},
+        {"question_text": "Some people think everyone should be required to volunteer at some point in their life. What's your opinion?", "response_time": 45},
+        {"question_text": "If you started your own community project, what problem would you want to solve?", "response_time": 45}
+      ]
+    },
+    {
+      "set_id": "iv_15",
+      "task_type": "interview",
+      "set_title": "Personal Finance and Spending",
+      "items": [
+        {"question_text": "How do you usually keep track of your spending?", "response_time": 45},
+        {"question_text": "What's something you save money for?", "response_time": 45},
+        {"question_text": "Some people think it's better to spend money on experiences than on things. Do you agree?", "response_time": 45},
+        {"question_text": "If you unexpectedly received a large amount of money, how would you decide what to do with it?", "response_time": 45}
+      ]
+    },
+    {
+      "set_id": "iv_16",
+      "task_type": "interview",
+      "set_title": "Weather and Seasons",
+      "items": [
+        {"question_text": "What's your favorite season, and why?", "response_time": 45},
+        {"question_text": "How does the weather usually affect your mood or plans?", "response_time": 45},
+        {"question_text": "Some people prefer places with four distinct seasons, while others prefer a climate that stays the same all year. What's your view?", "response_time": 45},
+        {"question_text": "If you could change the weather in your city for one day, what would you choose and why?", "response_time": 45}
+      ]
+    },
+    {
+      "set_id": "iv_17",
+      "task_type": "interview",
+      "set_title": "Art and Creativity",
+      "items": [
+        {"question_text": "Do you consider yourself a creative person? Why or why not?", "response_time": 45},
+        {"question_text": "What kind of art or creative activity do you enjoy most?", "response_time": 45},
+        {"question_text": "Some people think creativity can be taught, while others think it's a natural talent. What do you think?", "response_time": 45},
+        {"question_text": "If you had a free afternoon to create something, what would you make?", "response_time": 45}
+      ]
+    },
+    {
+      "set_id": "iv_18",
+      "task_type": "interview",
+      "set_title": "Teamwork and Group Projects",
+      "items": [
+        {"question_text": "Do you prefer working on a team or working by yourself? Why?", "response_time": 45},
+        {"question_text": "Tell me about a group project you worked on recently.", "response_time": 45},
+        {"question_text": "Some people think one strong leader makes a team more effective than equal collaboration. What's your opinion?", "response_time": 45},
+        {"question_text": "If a teammate wasn't doing their share of the work, how would you handle it?", "response_time": 45}
+      ]
+    },
+    {
+      "set_id": "iv_19",
+      "task_type": "interview",
+      "set_title": "Public Transportation",
+      "items": [
+        {"question_text": "How do you usually get around your city?", "response_time": 45},
+        {"question_text": "What do you like or dislike about public transportation where you live?", "response_time": 45},
+        {"question_text": "Some people think cities should invest more in public transportation instead of roads for cars. Do you agree?", "response_time": 45},
+        {"question_text": "If your city built one new form of public transportation, what should it be?", "response_time": 45}
+      ]
+    },
+    {
+      "set_id": "iv_20",
+      "task_type": "interview",
+      "set_title": "Adapting to Change",
+      "items": [
+        {"question_text": "Tell me about a time when you had to adjust to a big change in your life.", "response_time": 45},
+        {"question_text": "How do you usually react when your plans change suddenly?", "response_time": 45},
+        {"question_text": "Some people think change is exciting, while others find it stressful. Which best describes you?", "response_time": 45},
+        {"question_text": "If you had to move to a new city next month, what would be the hardest part for you?", "response_time": 45}
       ]
     }
   ]
